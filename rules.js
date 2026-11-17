@@ -15,12 +15,40 @@
     return { ok: true, state, message };
   }
 
+  let bound = null;
+
+  function bind(state) {
+    bound = state || null;
+  }
+
+  function roster() {
+    const people = (bound && bound.people) || [];
+    const seen = new Set();
+    const all = [];
+    for (const member of [...people, ...CANON.students, ...CANON.hosts]) {
+      if (!member || seen.has(member.id)) continue;
+      seen.add(member.id);
+      all.push(member);
+    }
+    return all;
+  }
+
   function person(id) {
-    return CANON.students.find((s) => s.id === id) || CANON.hosts.find((h) => h.id === id) || null;
+    return roster().find((member) => member.id === id) || null;
   }
 
   function isStudent(id) {
-    return CANON.students.some((s) => s.id === id);
+    const found = person(id);
+    if (!found || found.role === "host") return false;
+    if (CANON.hosts.some((host) => host.id === id)) return false;
+    return true;
+  }
+
+  function appointed(state, item, id) {
+    if (!item || !id) return false;
+    if (id === item.hostId) return true;
+    const named = (state.appointments && state.appointments[item.id]) || [];
+    return named.includes(id);
   }
 
   function campusParts(now) {
@@ -266,6 +294,7 @@
   }
 
   function openness(state, item, student, now, world) {
+    bind(state);
     if (item.proposed) return { open: false, reason: "On the ballot until Monday. It cannot be finished yet." };
     if (!isStudent(student.id)) return { open: false, reason: "Hosts mark presence. They do not finish items." };
     if (standingOf(state, student.id) <= 0) {
@@ -429,6 +458,7 @@
 
   function prepare(state, now) {
     const next = structuredClone(state);
+    bind(next);
     resolve(next, now);
     rotate(next, now);
     return next;
@@ -606,7 +636,8 @@
     const next = prepare(state, now);
     const request = next.hostQueue.find((entry) => entry.id === input.requestId);
     if (!request) return fail("That request expired or is already marked.");
-    if (input.hostId !== request.hostId) return fail("Only the host of this item can mark it.");
+    const itemForHost = itemById(next, request.itemId);
+    if (!appointed(next, itemForHost, input.hostId)) return fail("Only the host of this item can mark it.");
     if (standingOf(next, input.hostId) <= 0) return fail("You have no standing left to mark this.");
     if (standingOf(next, request.studentId) <= 0) return fail("The student has no standing left.");
     if (input.placeOk !== true || input.placeId !== request.placeId) {
@@ -639,6 +670,9 @@
     const proof = next.proofs.find((entry) => entry.id === input.proofId);
     if (!proof || proof.status !== "pending") return fail("This is no longer open to a challenge.");
     if (now.getTime() >= proof.challengeUntil) return fail("The challenge day is over.");
+    if (!student.college || !CANON.colleges.some((college) => college.name === student.college)) {
+      return fail("Choose your residential college before you challenge.");
+    }
     if (proof.studentId === student.id || proof.witnessId === student.id) {
       return fail("The two people on the proof cannot challenge it.");
     }
@@ -662,6 +696,8 @@
       youId: CANON.students[0].id,
       votes: {},
       suggestions: [],
+      people: [],
+      appointments: {},
       bookAdditions: [],
       proofs: [],
       pairs: {},
@@ -686,15 +722,15 @@
   }
 
   function scores(state) {
-    const map = {};
-    for (const student of CANON.students) map[student.college] = map[student.college] || 0;
+    bind(state);
+    const map = Object.fromEntries(CANON.colleges.map((college) => [college.name, 0]));
     for (const proof of state.proofs) {
       if (proof.status !== "counted") continue;
       const owner = person(proof.studentId);
-      if (!owner) continue;
-      map[owner.college] = (map[owner.college] || 0) + 1;
+      if (!owner || map[owner.college] == null) continue;
+      map[owner.college] += 1;
     }
-    return Object.entries(map).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    return CANON.colleges.map((college) => [college.name, map[college.name]]);
   }
 
   function noUserLocation(value, path, hits) {
@@ -706,8 +742,9 @@
   }
 
   function witnessChoices(state, studentId) {
-    return CANON.students
-      .filter((student) => student.id !== studentId)
+    bind(state);
+    return roster()
+      .filter((student) => student.id !== studentId && isStudent(student.id))
       .map((student) => {
         const count = pairCount(state, studentId, student.id);
         let blocked = null;
@@ -723,6 +760,7 @@
     TAP_MS,
     CHALLENGE_MS,
     person,
+    appointed,
     isStudent,
     campusParts,
     weekKey,

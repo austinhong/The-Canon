@@ -24,7 +24,11 @@ The location check is a yes or no against the place. The coordinates are not sto
 
 Anyone enrolled can propose one item at a time, and can vote once on each item except their own proposal. The five with the most votes are the top of the book. On Monday the counts go back to zero, so last week's winners do not sit there forever. The page says when the next clear is.
 
-The identity menu is a stand-in for campus sign-in, so two people can be tried on one computer. The place check and the camera are the real gates. Two phones on this static page share a tap code only if they share the browser's saved book. A server would carry the code between phones. It would not relax the place, the clock, the camera, or the challenge.
+Sign-in is Yale's own NetID page, [Central Authentication Service](https://secure.its.yale.edu/cas/login). The password is entered there and never sent to this book. After Yale redirects back, the server checks the ticket with Yale and refuses the session unless the reply names the person as a student. Faculty, staff, and affiliate NetIDs stay out. Yale only releases that student fact, and only accepts the callback, after Identity and Access Management registers the service URL.
+
+The fourteen residential colleges, as published by [Yale Housing](https://housing.yale.edu/undergraduate-housing/residential-colleges), are Benjamin Franklin, Berkeley, Branford, Davenport, Ezra Stiles, Grace Hopper, Jonathan Edwards, Morse, Pauli Murray, Pierson, Saybrook, Silliman, Timothy Dwight, and Trumbull. A student chooses theirs once. It cannot be switched from the page.
+
+A head of college or professor who should mark hosted items is named in `data/hosts.json`, by item id and NetID. Until a NetID is named, no one can stamp that hosted item.
 
 ## The sample book
 
@@ -51,5 +55,6 @@ Fences are approximate campus points, tight enough that a check-in from across t
 | `canon.js` | Places, people, and the starting items |
 | `rules.js` | Votes, windows, pairs, challenges, standing |
 | `rules.test.js` | The rules, without a browser |
+| `server.js` | Yale sign-in, the session, and the book |
 
-Open `index.html` from a local server so the camera and location are allowed to run. From this folder: `python3 -m http.server`. The rules alone can be checked with `node rules.test.js`.
+From this folder, run `node server.js` and open `http://127.0.0.1:8765`. Register that exact callback, `http://127.0.0.1:8765/auth/callback`, with Yale if you are signing in from this machine. The rules alone can be checked with `node rules.test.js`.

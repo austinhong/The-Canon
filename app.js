@@ -1,49 +1,51 @@
 (function () {
-  const KEY = "canon-state-v2";
   const rules = window.CanonRules;
   const app = document.getElementById("app");
+  const authErrors = {
+    student: "Yale signed you in, but did not confirm that this NetID belongs to a Yale College student.",
+    denied: "Yale did not accept this book as a registered service. Identity and Access Management has to allow the callback URL, limited to students.",
+    ticket: "The Yale sign-in ticket was not valid. Start again from this page.",
+    college: "That is not one of the fourteen residential colleges.",
+  };
 
-  let state = load();
+  let state = null;
+  let me = null;
   let world = { snowing: null };
   let notice = "";
   let busy = false;
+  let saving = false;
 
-  const appNode = () => document.getElementById("app");
-
-  function load() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return rules.initialState(new Date());
-      const parsed = JSON.parse(raw);
-      if (!parsed || !parsed.weekKey || !parsed.standing) return rules.initialState(new Date());
-      return rules.prepare(parsed, new Date());
-    } catch {
-      return rules.initialState(new Date());
+  function mount() {
+    const nodes = [];
+    for (let i = 0; i < arguments.length; i += 1) {
+      if (arguments[i] != null && arguments[i] !== false) nodes.push(arguments[i]);
     }
+    app.replaceChildren(...nodes);
   }
 
-  function save() {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state));
-    } catch {
-      notice = "This phone could not store the book. A photo may be too large, so the last action was not kept.";
-    }
+  function you() {
+    return (me && rules.person(me.id)) || me;
   }
 
-  function commit(result) {
+  async function commit(action, payload) {
+    saving = true;
+    const response = await fetch("/api/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.assign({ action }, payload || {})),
+    });
+    const result = await response.json();
+    saving = false;
     if (!result.ok) {
-      notice = result.error;
+      notice = result.error || "The book could not record that.";
+      if (result.user) me = result.user;
       render();
       return;
     }
     state = result.state;
+    me = result.user || me;
     notice = result.message || "";
-    save();
     render();
-  }
-
-  function you() {
-    return rules.person(state.youId);
   }
 
   function h(tag, attrs) {
@@ -192,7 +194,7 @@
       requestId: uid("host"),
     };
     busy = false;
-    commit(item.kind === "hosted" ? rules.beginHosted(state, input, new Date(), world) : rules.beginPresence(state, input, new Date(), world));
+    commit(item.kind === "hosted" ? "hosted" : "presence", input);
   }
 
   async function onWitness(itemId) {
@@ -221,23 +223,14 @@
       return;
     }
     busy = false;
-    commit(
-      rules.confirmWitness(
-        state,
-        {
-          studentId: tap.studentId,
-          witnessId: student.id,
-          itemId,
-          code: typed.trim(),
-          placeOk: true,
-          placeId: where.placeId,
-          photo: shot,
-          proofId: uid("proof"),
-        },
-        new Date(),
-        world,
-      ),
-    );
+    commit("witness", {
+      studentId: tap.studentId,
+      itemId,
+      code: typed.trim(),
+      placeOk: true,
+      placeId: where.placeId,
+      photo: shot,
+    });
   }
 
   async function onHost(requestId) {
@@ -255,15 +248,11 @@
       return;
     }
     busy = false;
-    commit(
-      rules.confirmHost(state, {
-        requestId,
-        hostId: you().id,
-        placeOk: true,
-        placeId: where.placeId,
-        proofId: uid("proof"),
-      }, new Date()),
-    );
+    commit("host", {
+      requestId,
+      placeOk: true,
+      placeId: where.placeId,
+    });
   }
 
   function liveTap(itemId) {
@@ -394,7 +383,62 @@
     return `${Math.max(minutes, 1)}m`;
   }
 
+  function crest() {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "crest");
+    svg.setAttribute("viewBox", "0 0 64 72");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML =
+      '<path d="M32 3 L58 14 V36 C58 52 46 64 32 69 C18 64 6 52 6 36 V14 Z" fill="none" stroke="currentColor" stroke-width="1.4"/>' +
+      '<path d="M18 40 V28 H28 C34 28 38 31 38 36 C38 41 34 44 28 44 H18" fill="none" stroke="currentColor" stroke-width="1.4"/>' +
+      '<path d="M18 34 H36" stroke="currentColor" stroke-width="1.4"/>';
+    return svg;
+  }
+
+  function renderGate() {
+    const params = new URLSearchParams(location.search);
+    const problem = authErrors[params.get("error")] || "";
+    mount(
+      crest(),
+      h("p", { class: "mark" }, "Yale College"),
+      h("h1", {}, "The Canon"),
+      h("p", { class: "lede" }, "For students of the fourteen residential colleges."),
+      h(
+        "p",
+        { class: "rule" },
+        "Sign in with your NetID on Yale's own page. This book never sees your password. A faculty, staff, or affiliate NetID is refused.",
+      ),
+      problem ? h("p", { class: "notice", role: "status" }, problem) : null,
+      h("a", { class: "enter", href: "/auth/login" }, "Enter with your NetID"),
+    );
+  }
+
+  function renderCollege() {
+    mount(
+      crest(),
+      h("p", { class: "mark" }, me.name),
+      h("h1", {}, "Your college"),
+      h("p", { class: "lede" }, "The book keeps one residential college for this NetID."),
+      notice ? h("p", { class: "notice", role: "status" }, notice) : null,
+      h(
+        "div",
+        { class: "colleges" },
+        window.CANON.colleges.map((college) =>
+          h("button", { type: "button", "data-action": "college", "data-id": college.name }, college.name),
+        ),
+      ),
+    );
+  }
+
   function render() {
+    if (!me) {
+      renderGate();
+      return;
+    }
+    if (!me.college) {
+      renderCollege();
+      return;
+    }
     const student = you();
     const now = new Date();
     state = rules.prepare(state, now);
@@ -409,39 +453,29 @@
         proof.status === "rejected" &&
         (proof.studentId === student.id || proof.witnessId === student.id || proof.hostId === student.id || proof.challenges.some((entry) => entry.studentId === student.id)),
     );
-    const hostJobs = state.hostQueue.filter((entry) => entry.hostId === student.id && entry.expires > Date.now());
+    const hostJobs = state.hostQueue.filter((entry) => {
+      const item = rules.itemById(state, entry.itemId);
+      return item && rules.appointed(state, item, student.id) && entry.expires > Date.now();
+    });
     const scoreList = rules.scores(state);
 
-    const people = h("select", { id: "who", "aria-label": "Viewing as" });
-    const students = h("optgroup", { label: "Students" });
-    const hosts = h("optgroup", { label: "Hosts" });
-    for (const member of window.CANON.students) {
-      const option = h("option", { value: member.id }, `${member.name} · ${member.college}`);
-      if (member.id === state.youId) option.selected = true;
-      students.append(option);
-    }
-    for (const host of window.CANON.hosts) {
-      const option = h("option", { value: host.id }, host.name);
-      if (host.id === state.youId) option.selected = true;
-      hosts.append(option);
-    }
-    people.append(students, hosts);
-
-    app.replaceChildren(
-      h("p", { class: "mark" }, "A campus book"),
+    mount(
+      crest(),
+      h("p", { class: "mark" }, "Yale College"),
       h("h1", {}, "The Canon"),
-      h("p", { class: "lede" }, "The top of the book is a vote. A finish is hard to fake."),
+      h("p", { class: "lede" }, "The register of the fourteen colleges."),
       h(
         "p",
         { class: "rule" },
-        `Students propose items and vote them into this week's top five. ${rules.nextResetLabel(now)} A finish needs a live camera on site, inside the time window, and a second phone that has not already confirmed you ${rules.PAIR_LIMIT} times. Other colleges have a day to knock it down. Hosted items are marked by the host. Location is checked, then discarded.`,
+        `The top of the book is a vote. ${rules.nextResetLabel(now)} A finish needs a live camera on site, inside the hour, and a second student's phone that has not already confirmed you ${rules.PAIR_LIMIT} times. Another two colleges may strike it within a day.`,
       ),
       h(
         "div",
         { class: "who" },
-        h("span", {}, "Viewing as"),
-        people,
+        h("span", {}, student.name),
+        h("span", { class: "gold" }, student.college),
         h("span", {}, `Standing ${rules.standingOf(state, student.id)}`),
+        h("a", { href: "/auth/logout" }, "Sign out"),
       ),
       notice ? h("p", { class: "notice", role: "status" }, notice) : null,
       h(
@@ -560,21 +594,15 @@
     if (!button || button.disabled) return;
     const id = button.getAttribute("data-id");
     const action = button.getAttribute("data-action");
-    if (action === "vote") commit(rules.vote(state, you().id, id, new Date()));
+    if (action === "vote") commit("vote", { itemId: id });
     if (action === "checkin") onCheckin(id);
     if (action === "witness") onWitness(id);
-    if (action === "challenge") commit(rules.challenge(state, { studentId: you().id, proofId: id }, new Date()));
+    if (action === "challenge") commit("challenge", { proofId: id });
     if (action === "host") onHost(id);
+    if (action === "college") commit("college", { college: id });
   });
 
   app.addEventListener("change", (event) => {
-    if (event.target.id === "who") {
-      state = rules.prepare(state, new Date());
-      state.youId = event.target.value;
-      notice = "";
-      save();
-      render();
-    }
     if (event.target.name === "kind") {
       const host = document.getElementById("host-field");
       if (host) host.hidden = event.target.value !== "hosted";
@@ -585,31 +613,14 @@
     if (event.target.id !== "propose") return;
     event.preventDefault();
     const data = new FormData(event.target);
-    commit(
-      rules.suggest(
-        state,
-        {
-          studentId: you().id,
-          title: data.get("title"),
-          rule: data.get("rule"),
-          placeId: data.get("placeId"),
-          windowId: data.get("windowId"),
-          kind: data.get("kind"),
-          hostId: data.get("hostId"),
-        },
-        new Date(),
-      ),
-    );
-  });
-
-  window.addEventListener("storage", (event) => {
-    if (event.key !== KEY || !event.newValue) return;
-    try {
-      state = rules.prepare(JSON.parse(event.newValue), new Date());
-      render();
-    } catch {
-      /* keep the current view */
-    }
+    commit("suggest", {
+      title: data.get("title"),
+      rule: data.get("rule"),
+      placeId: data.get("placeId"),
+      windowId: data.get("windowId"),
+      kind: data.get("kind"),
+      hostId: data.get("hostId"),
+    });
   });
 
   setInterval(() => {
@@ -618,20 +629,26 @@
       const left = Number(node.getAttribute("data-expires")) - Date.now();
       node.textContent = left > 0 ? `Expires in ${Math.ceil(left / 1000)}s` : "Expired";
     }
+    if (!state || !me || saving) return;
     if (camera && !camera.hidden) return;
     if (document.activeElement && ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
     const next = rules.prepare(state, new Date());
     const before = `${state.weekKey}|${state.proofs.map((proof) => proof.status).join()}|${Object.keys(state.taps).length}|${state.hostQueue.length}`;
     const after = `${next.weekKey}|${next.proofs.map((proof) => proof.status).join()}|${Object.keys(next.taps).length}|${next.hostQueue.length}`;
-    if (before !== after) {
-      state = next;
-      save();
-      render();
-    }
+    if (before !== after) commit("resolve", {});
   }, 1000);
 
-  render();
-  save();
+  fetch("/api/session")
+    .then((response) => response.json())
+    .then((data) => {
+      me = data.user;
+      state = data.state;
+      render();
+    })
+    .catch(() => {
+      notice = "Open this book from its server. A file on its own cannot sign you in.";
+      renderGate();
+    });
 
   fetch("https://api.open-meteo.com/v1/forecast?latitude=41.31&longitude=-72.928&current=snowfall,weather_code")
     .then((res) => res.json())

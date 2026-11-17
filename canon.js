@@ -33,6 +33,24 @@
   };
   for (const [id, value] of Object.entries(places)) value.id = id;
 
+  // Official fourteen, in the order published by Yale Housing.
+  const colleges = [
+    { name: "Benjamin Franklin", placeId: "franklin" },
+    { name: "Berkeley", placeId: "berkeley" },
+    { name: "Branford", placeId: "branford" },
+    { name: "Davenport", placeId: "davenport" },
+    { name: "Ezra Stiles", placeId: "stiles" },
+    { name: "Grace Hopper", placeId: "hopper" },
+    { name: "Jonathan Edwards", placeId: "je" },
+    { name: "Morse", placeId: "morse" },
+    { name: "Pauli Murray", placeId: "murray" },
+    { name: "Pierson", placeId: "pierson" },
+    { name: "Saybrook", placeId: "saybrook" },
+    { name: "Silliman", placeId: "silliman" },
+    { name: "Timothy Dwight", placeId: "td" },
+    { name: "Trumbull", placeId: "trumbull" },
+  ];
+
   const halls = [
     "berkeley",
     "branford",
@@ -52,6 +70,7 @@
 
   root.CANON = {
     places,
+    colleges,
     halls,
     collegePlace: {
       Berkeley: "berkeley",
