@@ -16,7 +16,7 @@ A second phone has to be at that place within a minute and type the code from th
 
 Hosted items skip the friend. A master's tea, a rehearsal, and a meal with a professor count when the host marks you present, and the host's phone has to be at the place too.
 
-The proof then sits for a day, with the photos, where other colleges can see it. A challenge from one college is only a flag. A second college strikes the item. Both the student and the witness, or the host, lose standing. At zero standing, further finishes do not count.
+The proof then sits for a day, with the photos, where other colleges can see it. A challenge from one college is only a flag. A second college strikes the item. Both the student and the witness, or the host, have one fewer challenge left. Everyone starts with three. At zero, further finishes do not count.
 
 The location check is a yes or no against the place. The coordinates are not stored. The book keeps the place name, the time, and the live photos.
 

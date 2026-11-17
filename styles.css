@@ -27,6 +27,7 @@ body {
 button, select, input, textarea, a { font: inherit; }
 
 main {
+  position: relative;
   max-width: 44rem;
   margin: 2.2rem auto 3rem;
   padding: 2.6rem 1.6rem 3.4rem;
@@ -36,6 +37,39 @@ main {
   color: var(--ink);
   border: 1px solid var(--gold);
   box-shadow: 0 0 0 7px #0c1a30, 0 0 0 8px var(--gold), 0 30px 70px rgba(0, 0, 0, 0.35);
+}
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: -1.1rem 0 0.2rem;
+}
+
+.identity {
+  display: block;
+  max-width: 16rem;
+  padding: 0.45rem 0.7rem 0.5rem;
+  text-align: right;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--gold);
+}
+
+.identity-name {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.identity-meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
 }
 
 .crest {
@@ -366,5 +400,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   main { margin: 0; box-shadow: none; }
   h1 { font-size: 2.6rem; }
   .scores, .colleges, .photos { grid-template-columns: 1fr; }
+  .topbar { justify-content: center; margin: 0 0 0.8rem; }
+  .identity { text-align: center; }
   .scores li:nth-child(even) { border-left: 0; padding-left: 0.2rem; }
 }

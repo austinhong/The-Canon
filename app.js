@@ -373,7 +373,7 @@
               ? `${colleges.join(" and ")} challenged. ${colleges.length} of 2 colleges.`
               : `Counts in ${formatLeft(left)} unless two colleges challenge it.`,
           )
-        : h("p", { class: "reason" }, `Challenged by ${colleges.join(" and ")}. Both people lost standing.`),
+        : h("p", { class: "reason" }, `Challenged by ${colleges.join(" and ")}. Both people have one fewer challenge left.`),
       h("div", { class: "photos" }, photo(proof.photo, "Live check-in photo"), photo(proof.witnessPhoto, "Witness photo")),
       canChallenge
         ? h(
@@ -440,6 +440,7 @@
 
   function renderCollege() {
     mount(
+      identity(),
       crest(),
       h("p", { class: "mark" }, me.name),
       h("h1", {}, "Your college"),
@@ -478,6 +479,31 @@
     return state.proofs.some((proof) => proof.status === "counted" && proof.studentId === studentId && proof.itemId === itemId);
   }
 
+  function identity() {
+    const student = you();
+    const points = state ? earned(student.id) : 0;
+    const detail = student.college
+      ? `${student.college} · ${points} ${points === 1 ? "point" : "points"}`
+      : "College not chosen";
+    return h(
+      "div",
+      { class: "topbar" },
+      h(
+        "a",
+        { class: "identity", href: student.college ? "#profile" : "#standings" },
+        h("span", { class: "identity-name" }, student.name),
+        h("span", { class: "identity-meta" }, detail),
+      ),
+    );
+  }
+
+  function challengesLeft(student) {
+    const left = rules.standingOf(state, student.id);
+    if (left <= 0) return "No challenges left. A finish does not count.";
+    const noun = left === 1 ? "challenge" : "challenges";
+    return `${left} ${noun} left. Two colleges can uphold one, and it costs a challenge. At zero, a finish does not count.`;
+  }
+
   function nav() {
     const current = page();
     return h(
@@ -490,6 +516,7 @@
 
   function frame(title, lede) {
     const nodes = [
+      identity(),
       crest(),
       h("p", { class: "mark" }, "Yale College"),
       h("h1", { class: "page" }, title),
@@ -566,7 +593,7 @@
     const complete = tasks.filter((item) => finishedItem(student.id, item.id)).length;
     frame(
       student.name,
-      `${student.college} · standing ${rules.standingOf(state, student.id)} · ${earned(student.id)} points`,
+      challengesLeft(student),
       h("p", { class: "rule" }, `${complete} of ${tasks.length} tasks in the book are finished.`),
       done.length ? section("Finished", done.map(proofCard)) : section("Finished", h("p", { class: "fine" }, "Nothing counted yet.")),
       pending.length ? section("Waiting out the day", pending.map(proofCard)) : null,

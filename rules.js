@@ -311,7 +311,7 @@
     if (item.proposed) return { open: false, reason: "On the ballot until Monday. It cannot be finished yet." };
     if (!isStudent(student.id)) return { open: false, reason: "Hosts mark presence. They do not finish items." };
     if (standingOf(state, student.id) <= 0) {
-      return { open: false, reason: "You have no standing left, so a finish would not count." };
+      return { open: false, reason: "No challenges left, so a finish would not count." };
     }
     if (item.mode === "stamps") {
       const upcoming = nextStamp(item, state, student, now);
@@ -601,7 +601,7 @@
     if (tap.code !== input.code) return fail("That code does not match the other phone.");
     if (!witness || !isStudent(witness.id)) return fail("A student who was there has to be the second phone.");
     if (witness.id === tap.studentId) return fail("You can't witness yourself.");
-    if (standingOf(next, witness.id) <= 0) return fail("The witness has no standing left.");
+    if (standingOf(next, witness.id) <= 0) return fail("The witness has no challenges left.");
     if (pairCount(next, tap.studentId, witness.id) >= PAIR_LIMIT) {
       return fail("You two have already confirmed each other three times. This one would not count.");
     }
@@ -661,8 +661,8 @@
     if (!request) return fail("That request expired or is already marked.");
     const itemForHost = itemById(next, request.itemId);
     if (!appointed(next, itemForHost, input.hostId)) return fail("Only the host of this item can mark it.");
-    if (standingOf(next, input.hostId) <= 0) return fail("You have no standing left to mark this.");
-    if (standingOf(next, request.studentId) <= 0) return fail("The student has no standing left.");
+    if (standingOf(next, input.hostId) <= 0) return fail("You have no challenges left to mark this.");
+    if (standingOf(next, request.studentId) <= 0) return fail("The student has no challenges left.");
     if (input.placeOk !== true || input.placeId !== request.placeId) {
       return fail("You have to be at the place to mark them present. Nothing was saved.");
     }
@@ -706,7 +706,7 @@
       proof.status = "rejected";
       dropStanding(next, proof.studentId);
       dropStanding(next, proof.witnessId || proof.hostId);
-      return ok(next, "The challenge held. The item is struck, and both of them lost standing.");
+      return ok(next, "The challenge held. The item is struck, and both of them have one fewer challenge left.");
     }
     return ok(next, "Noted. It takes a second college before the item is struck.");
   }
@@ -771,7 +771,7 @@
       .map((student) => {
         const count = pairCount(state, studentId, student.id);
         let blocked = null;
-        if (standingOf(state, student.id) <= 0) blocked = "no standing";
+        if (standingOf(state, student.id) <= 0) blocked = "no challenges left";
         else if (count >= PAIR_LIMIT) blocked = "worn out";
         return { id: student.id, name: student.name, college: student.college, count, blocked };
       });
