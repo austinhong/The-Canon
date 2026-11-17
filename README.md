@@ -1,30 +1,54 @@
-# Lantern
+# The Canon
 
-Verified, ephemeral walk-together for a residential campus.
+A four-year bucket list that a campus writes for itself. You cannot check an item off alone.
 
-Official systems cover courses, housing, and dining. They do not cover the ten minutes after the library closes, when a student is walking alone from Sterling to a residential college and would rather not go alone — but also does not want to post in a group chat, request a security escort, or install a consumer safety app that tracks them all night.
+Yale already has courses, housing, and dining software. It does not have a shared book of the things worth doing before you leave: the meal, the sunrise, the lecture in a department you will never major in, the Game once at home and once away. Those live in group chats, senior advice, and blog posts that go stale. The Canon is the book. Students propose items, the campus votes them in, and another enrolled student who was there has to witness them before they count.
 
-Lantern is that missing layer.
+At graduation the artifact is a map of the places you actually stood, not a photo dump.
 
-## How it works
+## How an item enters the book
 
-1. Sign in with campus SSO. Only enrolled students can see or post walks.
-2. Drop a start, a destination, and a leave-by time. Example: Sterling → Silliman, leaving in 8 minutes.
-3. See other verified students whose route overlaps yours in that window.
-4. Match for that walk. The request disappears when someone arrives or the window expires.
-5. If nobody is going your way, one tap hands the same trip to the existing campus escort service.
+1. Any enrolled student proposes an item: a title, a season, a place, and what counts as doing it.
+2. The campus votes. Items that do not clear the vote never appear in the book.
+3. An item that clears is live for everyone, unless it is marked hidden.
+4. Hidden items stay invisible until someone in your residential college completes them. Then they unlock for the rest of that college.
+5. Submissions that are dangerous or cruel are rejected. The point is a shared myth, not a dare that gets someone hurt.
 
-No permanent social graph. No public profiles. Routes are college geography (libraries, colleges, gates), not a general map product.
+## How you finish one
 
-## Why a place like Yale
+You do the thing. A witness — another enrolled student who was there — confirms it. A solo photo does not count. The witness rule is what keeps the list social: every finished item is a story with at least two people in it.
 
-- Residential colleges make destinations specific and repeated.
-- The campus is walkable and unevenly lit; night library culture is normal.
-- An escort program already exists. Students skip it because asking feels like a big deal, not because the information is missing.
-- Group chats are noisy, not route-aware, and leave a record.
+Each item carries a season and a window. "Eat in every dining hall in one day" is a fall challenge. "Walk out of Sterling into the first snow" can only be witnessed when that snow actually happens. Miss the window and the item waits until next year.
 
-Consumer apps (location sharing, neighborhood safety, ride hail) are the wrong shape: they are not limited to enrolled students, they keep a history, and they are not built around college geography.
+## Colleges, and the last semester
+
+Residential colleges keep a shared score. The book is personal, and it is also something your college is writing together.
+
+In the last semester, seniors get a last-chance queue: items their friends finished and they have not, sorted by what becomes impossible after May. A professor who is leaving. A tradition that only happens once a year. The Game, if this was the last home one.
+
+## What belongs in the book
+
+The list should feel like a life on this campus.
+
+- Eat in every dining hall in one day.
+- Stay for a full lecture in a department you will never major in.
+- Watch the sun come up from East Rock with people from your college.
+- Go to a master's tea in a college that is not yours.
+- Be in the room for The Game once at home and once away.
+- Leave a note in a library book for the next person who checks it out.
+- Walk out of an all-nighter in Sterling into the first snow.
+- Have a meal with a professor you do not have a class with.
+- Show up for one rehearsal in an art you do not practice.
+- In your last semester, do the thing seniors in your college say they regret skipping.
 
 ## This repo
 
-Starter only: product brief above, plus a one-page concept in `index.html`. Open that file in a browser to read the same idea as a page.
+A static scaffold, nothing more.
+
+| Path | What it is |
+| --- | --- |
+| `index.html` | The book, opened in a browser |
+| `canon.js` | The sample items, seasons, and witness rules |
+| `README.md` | This brief |
+
+Open `index.html` locally. The page reads `canon.js` and renders the current book. Add an item there first. Sign-in, voting, and witness confirmation are not built yet.

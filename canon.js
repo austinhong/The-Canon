@@ -1,0 +1,73 @@
+// The book. Add an item here and reload index.html.
+window.CANON = [
+  {
+    title: "Eat in every dining hall in one day",
+    season: "Fall",
+    place: "Every college dining hall",
+    rule: "Finish a meal in each hall between breakfast and dinner. A witness keeps the pace with you.",
+    hidden: false,
+  },
+  {
+    title: "Stay for a lecture you will never major in",
+    season: "Shopping period",
+    place: "Any department that is not yours",
+    rule: "Sit the full hour. The witness is someone who stayed too.",
+    hidden: false,
+  },
+  {
+    title: "Sunrise from East Rock",
+    season: "Any clear morning",
+    place: "East Rock",
+    rule: "Be there when the sun comes up, with people from your college.",
+    hidden: false,
+  },
+  {
+    title: "A master's tea in a college that is not yours",
+    season: "Whenever one is open",
+    place: "Another college",
+    rule: "Stay through the tea. The witness is the person who brought you, or anyone who sat with you.",
+    hidden: false,
+  },
+  {
+    title: "The Game, home and away",
+    season: "November",
+    place: "Yale Bowl, and Harvard",
+    rule: "Be in the stands once at home and once away. Each game needs its own witness.",
+    hidden: false,
+  },
+  {
+    title: "A note in a library book",
+    season: "Any semester",
+    place: "Sterling, Bass, or a college library",
+    rule: "Leave a note for the next reader. Your witness watches you put the book back.",
+    hidden: false,
+  },
+  {
+    title: "Out of Sterling into the first snow",
+    season: "First snow",
+    place: "Sterling Memorial Library",
+    rule: "Walk out of an all-nighter into that snow. The witness was in the room with you.",
+    hidden: true,
+  },
+  {
+    title: "A meal with a professor you do not have class with",
+    season: "Any semester",
+    place: "Wherever they say yes",
+    rule: "The meal happens. The witness can be the professor, or a classmate who came too.",
+    hidden: false,
+  },
+  {
+    title: "One rehearsal in an art you do not practice",
+    season: "Any semester",
+    place: "A choir, a dance call, a lab meeting",
+    rule: "Stay for the hour. The host, or anyone in the room, is the witness.",
+    hidden: true,
+  },
+  {
+    title: "The thing seniors say they regret skipping",
+    season: "Last semester",
+    place: "Ask your college",
+    rule: "Do the specific thing seniors in your college name. One of them witnesses it.",
+    hidden: true,
+  },
+];
