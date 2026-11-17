@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lantern</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1c1915;
+      --muted: #5c564c;
+      --line: #e4ddd2;
+      --paper: #f7f3ec;
+      --flame: #c45c26;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Iowan Old Style", serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    main {
+      max-width: 38rem;
+      margin: 0 auto;
+      padding: 4rem 1.5rem 5rem;
+    }
+    p.mark {
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.72rem;
+      color: var(--flame);
+      margin: 0 0 0.75rem;
+    }
+    h1 {
+      font-weight: 500;
+      font-size: 3rem;
+      line-height: 1;
+      margin: 0 0 1rem;
+    }
+    .lede {
+      font-size: 1.25rem;
+      margin: 0 0 2rem;
+    }
+    ol {
+      padding-left: 1.2rem;
+      margin: 0 0 2rem;
+    }
+    li { margin: 0.4rem 0; }
+    h2 {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin: 2rem 0 0.5rem;
+    }
+    p { margin: 0 0 1rem; color: var(--muted); }
+    .card {
+      border-top: 1px solid var(--line);
+      padding-top: 1.25rem;
+    }
+    .route {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      margin: 1.5rem 0 0;
+    }
+    .route strong { display: block; font-size: 1rem; color: var(--ink); }
+    .route span { color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="mark">Campus only · expires when you arrive</p>
+    <h1>Lantern</h1>
+    <p class="lede">Find another student walking your way tonight. The request vanishes when you get there.</p>
+    <div class="route">
+      <strong>Sterling → Silliman</strong>
+      <span>Leaving in 8 minutes · 2 students on this route</span>
+    </div>
+    <h2>What it does</h2>
+    <ol>
+      <li>Sign in with campus SSO. Only enrolled students can see walks.</li>
+      <li>Set a start, a destination, and a leave-by time.</li>
+      <li>Match someone whose route overlaps yours in that window.</li>
+      <li>If nobody is going your way, hand the same trip to the campus escort service.</li>
+    </ol>
+    <div class="card">
+      <h2>The gap</h2>
+      <p>Courses, housing, and dining already have software. The walk home after the library closes does not. Group chats are noisy. Escort services feel like a big ask. Consumer safety apps keep a history and are not limited to students.</p>
+      <p>Lantern is the short-lived, college-verified layer between those.</p>
+    </div>
+  </main>
+</body>
+</html>
