@@ -95,8 +95,14 @@ function redirect(res, location, sid) {
   send(res, 302, "", headers);
 }
 
-function json(res, status, value) {
-  send(res, status, JSON.stringify(value), { "Content-Type": "application/json; charset=utf-8" });
+function json(res, status, value, extra) {
+  send(res, status, JSON.stringify(value), Object.assign({ "Content-Type": "application/json; charset=utf-8" }, extra));
+}
+
+function startSession(person) {
+  const sid = crypto.randomBytes(24).toString("hex");
+  sessions.set(sid, { user: { id: person.id, name: person.name }, expires: Date.now() + 8 * 60 * 60 * 1000 });
+  return sid;
 }
 
 function readBody(req) {
@@ -304,9 +310,34 @@ const server = http.createServer(async (req, res) => {
       const state = loadBook();
       const person = ensurePerson(state, { id: cas.netid, name: cas.name });
       saveBook(state);
-      const sid = crypto.randomBytes(24).toString("hex");
-      sessions.set(sid, { user: { id: person.id, name: person.name }, expires: Date.now() + 8 * 60 * 60 * 1000 });
-      redirect(res, "/", sid);
+      redirect(res, "/", startSession(person));
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/auth/signup") {
+      if (!sameOrigin(req)) {
+        json(res, 403, { ok: false, error: "Open the book on its own site." });
+        return;
+      }
+      const body = await readBody(req);
+      const netid = String(body.netid || "").trim().toLowerCase();
+      const name = String(body.name || "").trim().replace(/\s+/g, " ");
+      if (!/^[a-z][a-z0-9]{1,30}$/.test(netid)) {
+        json(res, 400, { ok: false, error: "Enter a NetID of letters and numbers." });
+        return;
+      }
+      if (!/^[A-Za-z][A-Za-z .'-]{1,70}$/.test(name)) {
+        json(res, 400, { ok: false, error: "Enter the name that should stand in the book." });
+        return;
+      }
+      const state = loadBook();
+      const person = ensurePerson(state, { id: netid, name });
+      saveBook(state);
+      json(
+        res,
+        200,
+        { ok: true, user: publicUser(person), state: person.college ? rules.prepare(state, new Date()) : null },
+        { "Set-Cookie": `canon=${startSession(person)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800` },
+      );
       return;
     }
     if (req.method === "GET" && url.pathname === "/api/session") {

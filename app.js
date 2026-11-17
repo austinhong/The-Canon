@@ -14,6 +14,7 @@
   let notice = "";
   let busy = false;
   let saving = false;
+  let showManual = false;
 
   function mount() {
     const nodes = [];
@@ -406,10 +407,25 @@
       h(
         "p",
         { class: "rule" },
-        "Sign in with your NetID on Yale's own page. This book never sees your password. A faculty, staff, or affiliate NetID is refused.",
+        "Sign in with your NetID on Yale's own page. This book never sees your password. If Yale has not yet allowed this book, sign the register with your name and NetID.",
       ),
       problem ? h("p", { class: "notice", role: "status" }, problem) : null,
-      h("a", { class: "enter", href: "/auth/login" }, "Enter with your NetID"),
+      notice && showManual ? h("p", { class: "notice", role: "status" }, notice) : null,
+      h(
+        "div",
+        { class: "gate-actions" },
+        h("a", { class: "enter", href: "/auth/login" }, "Enter with your NetID"),
+        h("button", { type: "button", class: "ghost enter", "data-action": "manual" }, "Sign the register"),
+      ),
+      showManual
+        ? h(
+            "form",
+            { id: "signup", class: "signup" },
+            field("signup-name", "Name", h("input", { name: "name", autocomplete: "name", required: "true", maxlength: "70" })),
+            field("signup-netid", "NetID", h("input", { name: "netid", autocomplete: "username", required: "true", maxlength: "31", autocapitalize: "off" })),
+            h("button", { type: "submit" }, "Enter the book"),
+          )
+        : null,
     );
   }
 
@@ -600,6 +616,11 @@
     if (action === "challenge") commit("challenge", { proofId: id });
     if (action === "host") onHost(id);
     if (action === "college") commit("college", { college: id });
+    if (action === "manual") {
+      showManual = true;
+      notice = "";
+      renderGate();
+    }
   });
 
   app.addEventListener("change", (event) => {
@@ -610,6 +631,33 @@
   });
 
   app.addEventListener("submit", (event) => {
+    if (event.target.id === "signup") {
+      event.preventDefault();
+      const data = new FormData(event.target);
+      fetch("/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: data.get("name"), netid: data.get("netid") }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (!result.ok) {
+            notice = result.error || "The register could not be signed.";
+            renderGate();
+            return;
+          }
+          me = result.user;
+          state = result.state;
+          showManual = false;
+          notice = "";
+          render();
+        })
+        .catch(() => {
+          notice = "The register could not be signed.";
+          renderGate();
+        });
+      return;
+    }
     if (event.target.id !== "propose") return;
     event.preventDefault();
     const data = new FormData(event.target);
@@ -656,6 +704,7 @@
       const code = data.current && data.current.weather_code;
       const snowfall = data.current && data.current.snowfall;
       world = { snowing: (snowfall || 0) > 0 || [71, 73, 75, 77, 85, 86].includes(code) };
+      if (document.getElementById("signup")) return;
       render();
     })
     .catch(() => {

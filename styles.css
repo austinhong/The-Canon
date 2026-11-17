@@ -124,6 +124,23 @@ a { color: var(--gold-deep); }
   margin: 1.4rem auto 0;
 }
 
+.gate-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
+}
+
+.gate-actions .enter { margin: 0; }
+
+.signup {
+  max-width: 22rem;
+  margin: 1.3rem auto 0;
+}
+
+.signup button { margin-top: 0.4rem; }
+
 button.ghost {
   background: transparent;
   color: var(--navy);
