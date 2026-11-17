@@ -1,0 +1,241 @@
+:root {
+  color-scheme: light;
+  --ink: #1b1714;
+  --muted: #5e564c;
+  --line: #e3d9cc;
+  --paper: #f4efe6;
+  --card: #fffdf8;
+  --top: #fff6ee;
+  --mark: #8c3a2f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Georgia, "Iowan Old Style", serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+button, select, input, textarea {
+  font: inherit;
+}
+
+button, select, input, textarea {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+main {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.15rem 4rem;
+}
+
+.mark {
+  margin: 0 0 0.65rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mark);
+}
+
+h1 {
+  margin: 0 0 0.7rem;
+  font-weight: 500;
+  font-size: 3.1rem;
+  line-height: 0.95;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.lede { margin: 0 0 0.8rem; font-size: 1.15rem; }
+
+.rule, .fine, .reason, .author {
+  margin: 0;
+  color: var(--muted);
+}
+
+.who {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+  margin: 1.1rem 0 0.4rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.92rem;
+}
+
+select, input, textarea {
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+}
+
+textarea { width: 100%; min-height: 4.5rem; resize: vertical; }
+
+.scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scores li {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+}
+
+section { margin-top: 1.8rem; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1rem 1rem;
+  margin: 0 0 0.7rem;
+}
+
+.card.top { background: var(--top); }
+.card.sealed { border-style: dashed; }
+.card.pending { border-color: var(--mark); }
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.meta, .method {
+  margin: 0 0 0.3rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mark);
+}
+
+.method { text-transform: none; letter-spacing: 0; color: var(--muted); margin-top: 0.35rem; }
+
+.rank {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: var(--mark);
+}
+
+button {
+  background: var(--ink);
+  color: var(--paper);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+button:disabled { opacity: 0.45; cursor: default; }
+
+.actions, .inline, .cam-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.code {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.18em;
+  margin: 0.4rem 0;
+}
+
+.notice {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  margin: 1rem 0 0;
+}
+
+form .field { margin: 0 0 0.7rem; }
+
+form label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mark);
+}
+
+.photos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.photos img, .card img {
+  width: 100%;
+  border-radius: 8px;
+  background: #eee;
+}
+
+#camera {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: #111;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+#camera[hidden] { display: none; }
+
+#cam-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cam-actions { position: relative; }
+
+#camera p {
+  position: relative;
+  margin: 0.4rem 0 0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.85rem;
+}
+
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--mark);
+  outline-offset: 2px;
+}

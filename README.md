@@ -1,54 +1,55 @@
 # The Canon
 
-A four-year bucket list that a campus writes for itself. You cannot check an item off alone.
+A four-year bucket list that a campus writes for itself. The top of the book moves. A finish is hard to fake.
 
-Yale already has courses, housing, and dining software. It does not have a shared book of the things worth doing before you leave: the meal, the sunrise, the lecture in a department you will never major in, the Game once at home and once away. Those live in group chats, senior advice, and blog posts that go stale. The Canon is the book. Students propose items, the campus votes them in, and another enrolled student who was there has to witness them before they count.
+Students propose items and vote them into this week's top five. The votes clear every Monday at midnight, campus time, and whatever is still on top is that week's list. Proposals that finish the week there join the book. A proposal has to use a real campus place. It cannot drop a pin on a friend's room.
 
-At graduation the artifact is a map of the places you actually stood, not a photo dump.
+Finishing an item is separate from voting for it.
 
-## How an item enters the book
+## How a finish counts
 
-1. Any enrolled student proposes an item: a title, a season, a place, and what counts as doing it.
-2. The campus votes. Items that do not clear the vote never appear in the book.
-3. An item that clears is live for everyone, unless it is marked hidden.
-4. Hidden items stay invisible until someone in your residential college completes them. Then they unlock for the rest of that college.
-5. Submissions that are dangerous or cruel are rejected. The point is a shared myth, not a dare that gets someone hurt.
+The phone has to be inside the place, during that item's window. Sunrise at East Rock opens for twenty minutes on either side of sunrise. The Game opens only while that game is being played, once at the Bowl and once at Harvard. The dining-hall day opens during meal hours and needs every college hall on the same campus day. The snow item opens only when it is actually snowing on campus. A sealed item stays off the public ranking until someone finishes it. The title stays visible, so a first person can do it.
 
-## How you finish one
+The camera is live. A photo from the gallery cannot be submitted. The page has no upload control.
 
-You do the thing. A witness — another enrolled student who was there — confirms it. A solo photo does not count. The witness rule is what keeps the list social: every finished item is a story with at least two people in it.
+A second phone has to be at that place within a minute and type the code from the first phone. That pair can confirm each other three times. After that, their confirmations stop counting. A friend with a loyal thumb wears out.
 
-Each item carries a season and a window. "Eat in every dining hall in one day" is a fall challenge. "Walk out of Sterling into the first snow" can only be witnessed when that snow actually happens. Miss the window and the item waits until next year.
+Hosted items skip the friend. A master's tea, a rehearsal, and a meal with a professor count when the host marks you present, and the host's phone has to be at the place too.
 
-## Colleges, and the last semester
+The proof then sits for a day, with the photos, where other colleges can see it. A challenge from one college is only a flag. A second college strikes the item. Both the student and the witness, or the host, lose standing. At zero standing, further finishes do not count.
 
-Residential colleges keep a shared score. The book is personal, and it is also something your college is writing together.
+The location check is a yes or no against the place. The coordinates are not stored. The book keeps the place name, the time, and the live photos.
 
-In the last semester, seniors get a last-chance queue: items their friends finished and they have not, sorted by what becomes impossible after May. A professor who is leaving. A tradition that only happens once a year. The Game, if this was the last home one.
+## This week
 
-## What belongs in the book
+Anyone enrolled can propose one item at a time, and can vote once on each item except their own proposal. The five with the most votes are the top of the book. On Monday the counts go back to zero, so last week's winners do not sit there forever. The page says when the next clear is.
 
-The list should feel like a life on this campus.
+The identity menu is a stand-in for campus sign-in, so two people can be tried on one computer. The place check and the camera are the real gates. Two phones on this static page share a tap code only if they share the browser's saved book. A server would carry the code between phones. It would not relax the place, the clock, the camera, or the challenge.
+
+## The sample book
 
 - Eat in every dining hall in one day.
 - Stay for a full lecture in a department you will never major in.
-- Watch the sun come up from East Rock with people from your college.
+- Watch the sun come up from East Rock.
 - Go to a master's tea in a college that is not yours.
-- Be in the room for The Game once at home and once away.
-- Leave a note in a library book for the next person who checks it out.
-- Walk out of an all-nighter in Sterling into the first snow.
-- Have a meal with a professor you do not have a class with.
+- Be in the stands for The Game at home and away.
+- Leave a note in a library book.
+- Walk out of Sterling into the first snow.
+- Have a meal with a professor you do not have class with.
 - Show up for one rehearsal in an art you do not practice.
 - In your last semester, do the thing seniors in your college say they regret skipping.
 
-## This repo
+Fences are approximate campus points, tight enough that a check-in from across town fails.
 
-A static scaffold, nothing more.
+## This repo
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | The book, opened in a browser |
-| `canon.js` | The sample items, seasons, and witness rules |
-| `README.md` | This brief |
+| `index.html` | The book |
+| `styles.css` | The page |
+| `app.js` | The camera, the place check, and the screen |
+| `canon.js` | Places, people, and the starting items |
+| `rules.js` | Votes, windows, pairs, challenges, standing |
+| `rules.test.js` | The rules, without a browser |
 
-Open `index.html` locally. The page reads `canon.js` and renders the current book. Add an item there first. Sign-in, voting, and witness confirmation are not built yet.
+Open `index.html` from a local server so the camera and location are allowed to run. From this folder: `python3 -m http.server`. The rules alone can be checked with `node rules.test.js`.

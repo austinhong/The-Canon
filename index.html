@@ -4,101 +4,20 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Canon</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --ink: #1b1714;
-      --muted: #5e564c;
-      --line: #e3d9cc;
-      --paper: #f4efe6;
-      --card: #fffdf8;
-      --mark: #8c3a2f;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Georgia, "Iowan Old Style", serif;
-      background: var(--paper);
-      color: var(--ink);
-      line-height: 1.5;
-    }
-    main {
-      max-width: 40rem;
-      margin: 0 auto;
-      padding: 3.5rem 1.25rem 4.5rem;
-    }
-    .mark {
-      margin: 0 0 0.7rem;
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--mark);
-    }
-    h1 {
-      margin: 0 0 0.8rem;
-      font-weight: 500;
-      font-size: 3.2rem;
-      line-height: 0.95;
-    }
-    .lede {
-      margin: 0 0 1.75rem;
-      font-size: 1.2rem;
-    }
-    .rule {
-      margin: 0 0 1.75rem;
-      color: var(--muted);
-    }
-    ol { margin: 0; padding: 0; list-style: none; }
-    li {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 0.95rem 1rem 0.85rem;
-      margin: 0 0 0.7rem;
-    }
-    h2 {
-      margin: 0 0 0.35rem;
-      font-size: 1.15rem;
-      font-weight: 500;
-    }
-    .meta {
-      margin: 0 0 0.35rem;
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--mark);
-    }
-    p { margin: 0; color: var(--muted); }
-    .hidden {
-      border-style: dashed;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main>
-    <p class="mark">A campus book · witnessed to count</p>
-    <h1>The Canon</h1>
-    <p class="lede">The things worth doing here before you leave. Someone who was there has to say you did them.</p>
-    <p class="rule">Hidden items stay locked until someone in your college finishes them. Then the rest of the college can see them.</p>
-    <ol id="book"></ol>
-  </main>
+  <div id="camera" hidden>
+    <video id="cam-video" playsinline autoplay muted></video>
+    <div class="cam-actions">
+      <button id="cam-capture" type="button">Take the photo</button>
+      <button id="cam-cancel" class="ghost" type="button">Cancel</button>
+    </div>
+    <p>This uses the camera right now. A photo from your gallery cannot be submitted.</p>
+  </div>
+  <main id="app"></main>
   <script src="canon.js"></script>
-  <script>
-    const book = document.getElementById("book");
-    for (const item of window.CANON) {
-      const li = document.createElement("li");
-      if (item.hidden) li.className = "hidden";
-      li.innerHTML = `
-        <p class="meta">${item.season} · ${item.place}${item.hidden ? " · hidden" : ""}</p>
-        <h2></h2>
-        <p></p>
-      `;
-      li.querySelector("h2").textContent = item.title;
-      li.querySelector("p:last-child").textContent = item.rule;
-      book.appendChild(li);
-    }
-  </script>
+  <script src="rules.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
