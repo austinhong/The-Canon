@@ -169,7 +169,7 @@ assert.deepEqual(coords(state), []);
 const later = new Date(NOW.getTime() + rules.CHALLENGE_MS + 1000);
 state = rules.prepare(state, later);
 assert.equal(state.proofs[0].status, "counted");
-assert.equal(rules.scores(state).find(([college]) => college === "Silliman")[1], 1);
+assert.equal(rules.scores(state).find(([college]) => college === "Silliman")[1], rules.pointsOf(rules.itemById(state, "dining-day")));
 
 state = rules.blankState(NOW);
 step = rules.beginHosted(
@@ -193,7 +193,7 @@ assert.equal(state.proofs[0].witnessId, null);
 state = rules.blankState(NOW);
 step = rules.suggest(
   state,
-  { id: "late-exhibit", studentId: "maya", title: "Close the art gallery", rule: "Stay until the guard asks you to leave.", placeId: "lc", windowId: "evening", kind: "presence" },
+  { id: "late-exhibit", studentId: "maya", title: "Close the art gallery", rule: "Stay until the guard asks you to leave.", placeId: "lc", windowId: "evening", kind: "presence", category: "letters", difficulty: "modest" },
   NOW,
 );
 assert.equal(step.ok, true, step.error);
@@ -217,6 +217,8 @@ state = rules.prepare(state, NOW);
 assert.equal(state.suggestions.length, 0);
 assert.equal(state.bookAdditions[0].id, "late-exhibit");
 assert.equal(state.bookAdditions[0].window.type, "hours");
+assert.equal(state.bookAdditions[0].points, 2);
+assert.equal(state.bookAdditions[0].category, "letters");
 assert.equal(Object.keys(state.votes).length, 0);
 assert.equal(state.lastCrown.titles[0], "Close the art gallery");
 assert.equal(rules.weekKey(NOW), state.weekKey);

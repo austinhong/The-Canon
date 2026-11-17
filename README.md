@@ -22,7 +22,7 @@ The location check is a yes or no against the place. The coordinates are not sto
 
 ## This week
 
-Anyone enrolled can propose one item at a time, and can vote once on each item except their own proposal. The five with the most votes are the top of the book. On Monday the counts go back to zero, so last week's winners do not sit there forever. The page says when the next clear is.
+The book is split into Standings, Profile, Vote, Propose, and Finish. Anyone enrolled can propose one item at a time, in a section and at a difficulty, and can vote once on each item except their own proposal. The five with the most votes are the top of the book. On Monday the counts go back to zero. A proposal still on top joins the book. A counted finish adds that task's points to the college: modest 2, marked 3, severe 5, rare 8.
 
 Sign-in is Yale's own NetID page, [Central Authentication Service](https://secure.its.yale.edu/cas/login). The password is entered there and never sent to this book. After Yale redirects back, the server checks the ticket with Yale and refuses the session unless the reply names the person as a student. Faculty, staff, and affiliate NetIDs stay out. Yale only releases that student fact, and only accepts the callback, after Identity and Access Management registers the service URL. Until that registration exists, a student can sign the register by hand with a name and NetID. That entry is not checked with Yale.
 

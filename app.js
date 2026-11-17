@@ -272,35 +272,44 @@
     const mine = student.id === (tap && tap.studentId);
     const author = item.authorId ? rules.person(item.authorId) : null;
     const sealed = item.hidden && !rules.isPublic(state, item);
-    const canVote = rules.isStudent(student.id) && !sealed && !(item.proposed && item.authorId === student.id);
-    const showCheckin = open.open && rules.isStudent(student.id) && !item.proposed && !waiting && !tap;
+    const voting = options.mode === "vote";
+    const finishing = options.mode === "finish";
+    const canVote = voting && rules.isStudent(student.id) && !sealed && !(item.proposed && item.authorId === student.id);
+    const showCheckin = finishing && open.open && rules.isStudent(student.id) && !item.proposed && !waiting && !tap;
 
     return h(
       "article",
-      { class: `card${options.top ? " top" : ""}${item.hidden && !rules.isPublic(state, item) ? " sealed" : ""}` },
+      { class: `card${options.top ? " top" : ""}${sealed ? " sealed" : ""}` },
       h(
         "div",
         { class: "card-top" },
         h(
           "div",
           {},
-          options.rank ? h("p", { class: "rank" }, String(options.rank)) : null,
-          h("p", { class: "meta" }, [item.season || "Proposed", item.proposed ? "On the ballot" : null].filter(Boolean).join(" · ")),
+          options.rank ? h("p", { class: "rank" }, `No. ${options.rank}`) : null,
+          h(
+            "p",
+            { class: "meta" },
+            [rules.categoryName(item), `${rules.pointsOf(item)} pts`, item.proposed ? "On the ballot" : item.season || null]
+              .filter(Boolean)
+              .join(" · "),
+          ),
           h("h2", {}, item.title),
         ),
         canVote
           ? h(
               "button",
               { type: "button", class: voted ? "" : "ghost", "data-action": "vote", "data-id": item.id, "aria-pressed": voted ? "true" : "false" },
-              voted ? "Voted" : "Vote",
+              voted ? "Withdraw" : "Vote",
             )
           : null,
       ),
+      voting ? h("p", { class: "points" }, votes === 1 ? "1 vote" : `${votes} votes`) : null,
       h("p", { class: "fine" }, item.rule),
-      h("p", { class: "method" }, rules.methodLabel(item)),
+      finishing || !voting ? h("p", { class: "method" }, rules.methodLabel(item)) : null,
       author ? h("p", { class: "author" }, `Proposed by ${author.name}`) : null,
-      h("p", { class: "reason" }, open.reason),
-      mine
+      finishing ? h("p", { class: "reason" }, open.reason) : null,
+      finishing && mine
         ? h(
             "div",
             {},
@@ -309,7 +318,7 @@
             h("p", { class: "fine", "data-expires": String(tap.expires) }, "Code is live"),
           )
         : null,
-      tap && !mine && rules.isStudent(student.id)
+      finishing && tap && !mine && rules.isStudent(student.id)
         ? h(
             "div",
             {},
@@ -322,7 +331,7 @@
             ),
           )
         : null,
-      waiting ? h("p", { class: "reason" }, "Waiting for the host, who has to be at the place.") : null,
+      finishing && waiting ? h("p", { class: "reason" }, "Waiting for the host, who has to be at the place.") : null,
       showCheckin
         ? h(
             "div",
@@ -446,6 +455,69 @@
     );
   }
 
+  const PAGES = [
+    ["standings", "Standings"],
+    ["profile", "Profile"],
+    ["vote", "Vote"],
+    ["propose", "Propose"],
+    ["finish", "Finish"],
+  ];
+
+  function page() {
+    const name = (location.hash || "#standings").slice(1).split("/")[0];
+    return PAGES.some(([id]) => id === name) ? name : "standings";
+  }
+
+  function earned(studentId) {
+    return state.proofs
+      .filter((proof) => proof.status === "counted" && proof.studentId === studentId)
+      .reduce((sum, proof) => sum + rules.pointsOf(rules.itemById(state, proof.itemId)), 0);
+  }
+
+  function finishedItem(studentId, itemId) {
+    return state.proofs.some((proof) => proof.status === "counted" && proof.studentId === studentId && proof.itemId === itemId);
+  }
+
+  function nav() {
+    const current = page();
+    return h(
+      "nav",
+      { class: "nav" },
+      PAGES.map(([id, label]) => h("a", { href: `#${id}`, class: current === id ? "on" : "" }, label)),
+      h("a", { href: "/auth/logout" }, "Sign out"),
+    );
+  }
+
+  function frame(title, lede) {
+    const nodes = [
+      crest(),
+      h("p", { class: "mark" }, "Yale College"),
+      h("h1", { class: "page" }, title),
+      lede ? h("p", { class: "lede" }, lede) : null,
+      nav(),
+      notice ? h("p", { class: "notice", role: "status" }, notice) : null,
+    ];
+    for (let i = 2; i < arguments.length; i += 1) {
+      const child = arguments[i];
+      if (Array.isArray(child)) nodes.push(...child);
+      else nodes.push(child);
+    }
+    mount(...nodes);
+  }
+
+  function grouped(items, mode) {
+    return window.CANON.categories
+      .map((category) => {
+        const rows = items.filter((item) => item.category === category.id);
+        if (!rows.length) return null;
+        return section(
+          category.name,
+          rows.map((item) => card(item, { mode })),
+        );
+      })
+      .filter(Boolean);
+  }
+
   function render() {
     if (!me) {
       renderGate();
@@ -455,57 +527,93 @@
       renderCollege();
       return;
     }
+    if (!location.hash) {
+      location.replace("#standings");
+      return;
+    }
     const student = you();
+    state = rules.prepare(state, new Date());
+    const current = page();
+    if (current === "profile") renderProfile(student);
+    else if (current === "vote") renderVote(student);
+    else if (current === "propose") renderPropose(student);
+    else if (current === "finish") renderFinish(student);
+    else renderStandings(student);
+  }
+
+  function renderStandings(student) {
+    const scoreList = rules.scores(state);
+    frame(
+      "Standings",
+      "Counted finishes, weighted by how hard the task is.",
+      h(
+        "ul",
+        { class: "scores" },
+        scoreList.map(([college, score]) =>
+          h("li", { class: college === student.college ? "mine" : "" }, h("span", {}, college), h("span", {}, String(score))),
+        ),
+      ),
+      h("p", { class: "fine center" }, "A modest task is 2. A marked task is 3. A severe task is 5. A rare task is 8."),
+    );
+  }
+
+  function renderProfile(student) {
+    const mine = state.proofs.filter((proof) => proof.studentId === student.id || proof.witnessId === student.id || proof.hostId === student.id);
+    const done = mine.filter((proof) => proof.status === "counted" && proof.studentId === student.id);
+    const pending = mine.filter((proof) => proof.status === "pending");
+    const struck = mine.filter((proof) => proof.status === "rejected");
+    const tasks = rules.book(state).filter((item) => rules.isPublic(state, item));
+    const complete = tasks.filter((item) => finishedItem(student.id, item.id)).length;
+    frame(
+      student.name,
+      `${student.college} · standing ${rules.standingOf(state, student.id)} · ${earned(student.id)} points`,
+      h("p", { class: "rule" }, `${complete} of ${tasks.length} tasks in the book are finished.`),
+      done.length ? section("Finished", done.map(proofCard)) : section("Finished", h("p", { class: "fine" }, "Nothing counted yet.")),
+      pending.length ? section("Waiting out the day", pending.map(proofCard)) : null,
+      struck.length ? section("Struck", struck.map(proofCard)) : null,
+    );
+  }
+
+  function renderVote() {
     const now = new Date();
-    state = rules.prepare(state, now);
     const top = rules.topList(state);
     const topIds = new Set(top.map((item) => item.id));
-    const rest = rules.book(state).filter((item) => rules.isPublic(state, item) && !topIds.has(item.id));
-    const sealed = rules.book(state).filter((item) => item.hidden && !rules.isPublic(state, item));
-    const ballot = state.suggestions.filter((item) => !topIds.has(item.id));
-    const pending = state.proofs.filter((proof) => proof.status === "pending");
-    const struck = state.proofs.filter(
-      (proof) =>
-        proof.status === "rejected" &&
-        (proof.studentId === student.id || proof.witnessId === student.id || proof.hostId === student.id || proof.challenges.some((entry) => entry.studentId === student.id)),
+    const rest = rules.rankable(state).filter((item) => !topIds.has(item.id) && !(item.hidden && !rules.isPublic(state, item)));
+    frame(
+      "This week",
+      `${rules.nextResetLabel(now)} One vote on each task, except your own proposal. The five with the most votes are the top.`,
+      section(
+        "The top",
+        top.length
+          ? top.map((item, index) => card(item, { mode: "vote", top: true, rank: index + 1 }))
+          : h("p", { class: "fine" }, "No votes yet."),
+      ),
+      grouped(rest, "vote"),
+      state.lastCrown && state.lastCrown.titles.length
+        ? section("Last week on top", h("p", { class: "fine" }, state.lastCrown.titles.join(" · ")))
+        : null,
     );
+  }
+
+  function renderPropose(student) {
+    const mine = (state.suggestions || []).find((item) => item.authorId === student.id);
+    frame(
+      "Propose",
+      "One proposal at a time. If it is still in the top five when the votes clear, it joins the book.",
+      mine ? section("Your proposal", card({ ...mine, proposed: true }, { mode: "vote" })) : proposeForm(),
+    );
+  }
+
+  function renderFinish(student) {
+    const pending = state.proofs.filter((proof) => proof.status === "pending");
     const hostJobs = state.hostQueue.filter((entry) => {
       const item = rules.itemById(state, entry.itemId);
       return item && rules.appointed(state, item, student.id) && entry.expires > Date.now();
     });
-    const scoreList = rules.scores(state);
-
-    mount(
-      crest(),
-      h("p", { class: "mark" }, "Yale College"),
-      h("h1", {}, "The Canon"),
-      h("p", { class: "lede" }, "The register of the fourteen colleges."),
-      h(
-        "p",
-        { class: "rule" },
-        `The top of the book is a vote. ${rules.nextResetLabel(now)} A finish needs a live camera on site, inside the hour, and a second student's phone that has not already confirmed you ${rules.PAIR_LIMIT} times. Another two colleges may strike it within a day.`,
-      ),
-      h(
-        "div",
-        { class: "who" },
-        h("span", {}, student.name),
-        h("span", { class: "gold" }, student.college),
-        h("span", {}, `Standing ${rules.standingOf(state, student.id)}`),
-        h("a", { href: "/auth/logout" }, "Sign out"),
-      ),
-      notice ? h("p", { class: "notice", role: "status" }, notice) : null,
-      h(
-        "ul",
-        { class: "scores" },
-        scoreList.map(([college, score]) => h("li", {}, `${college} ${score}`)),
-      ),
-      section(
-        "This week",
-        top.length
-          ? top.map((item, index) => card(item, { top: true, rank: index + 1 }))
-          : h("p", { class: "fine" }, "No votes yet. The top is open."),
-      ),
-      pending.length ? section("Open to a challenge", pending.map(proofCard)) : null,
+    const tasks = rules.book(state);
+    frame(
+      "Finish",
+      `A live camera, on site, inside the hour. A second phone can confirm you ${rules.PAIR_LIMIT} times. Two other colleges can strike a finish within a day.`,
       hostJobs.length
         ? section(
             "Waiting on you",
@@ -527,17 +635,8 @@
             }),
           )
         : null,
-      section(
-        "The book",
-        rest.map((item) => card(item, {})),
-      ),
-      sealed.length ? section("Sealed until someone finishes one", sealed.map((item) => card(item, {}))) : null,
-      ballot.length ? section("On the ballot", ballot.map((item) => card({ ...item, proposed: true }, {}))) : null,
-      proposeForm(student),
-      struck.length ? section("Struck", struck.map(proofCard)) : null,
-      state.lastCrown && state.lastCrown.titles.length
-        ? section("Last week on top", h("p", { class: "fine" }, state.lastCrown.titles.join(" · ")))
-        : null,
+      pending.length ? section("Open to a challenge", pending.map(proofCard)) : null,
+      grouped(tasks, "finish"),
     );
   }
 
@@ -545,40 +644,53 @@
     return h("section", {}, h("p", { class: "mark" }, kicker), body);
   }
 
-  function proposeForm(student) {
-    if (!rules.isStudent(student.id)) return null;
+  function proposeForm() {
     const places = Object.entries(window.CANON.places).sort((a, b) => a[1].name.localeCompare(b[1].name));
-    return section(
-      "Propose",
-      h(
-        "form",
-        { id: "propose" },
-        field("title", "Title", h("input", { name: "title", maxlength: "80", required: "true" })),
-        field("rule", "What counts", h("textarea", { name: "rule", maxlength: "200", required: "true" })),
-        field(
-          "place",
-          "Campus place",
-          select(
-            "placeId",
-            places.map(([id, place]) => [id, place.name]),
-          ),
+    return h(
+      "form",
+      { id: "propose" },
+      field("title", "Title", h("input", { name: "title", maxlength: "80", required: "true" })),
+      field("rule", "What counts", h("textarea", { name: "rule", maxlength: "200", required: "true" })),
+      field(
+        "category",
+        "Section",
+        select(
+          "category",
+          window.CANON.categories.map((category) => [category.id, category.name]),
         ),
-        field(
-          "window",
-          "When it can be finished",
-          select(
-            "windowId",
-            window.CANON.windowChoices.map((choice) => [choice.id, choice.label]),
-          ),
+      ),
+      field(
+        "difficulty",
+        "Difficulty",
+        select(
+          "difficulty",
+          window.CANON.difficulties.map((level) => [level.id, `${level.label}, ${level.points} points`]),
         ),
-        field(
-          "kind",
-          "Who confirms it",
-          select("kind", [
-            ["presence", "A second student, on site"],
-            ["hosted", "A host, on site"],
-          ]),
+      ),
+      field(
+        "place",
+        "Campus place",
+        select(
+          "placeId",
+          places.map(([id, place]) => [id, place.name]),
         ),
+      ),
+      field(
+        "window",
+        "When it can be finished",
+        select(
+          "windowId",
+          window.CANON.windowChoices.map((choice) => [choice.id, choice.label]),
+        ),
+      ),
+      field(
+        "kind",
+        "Who confirms it",
+        select("kind", [
+          ["presence", "A second student, on site"],
+          ["hosted", "A host, on site"],
+        ]),
+      ),
         h(
           "div",
           { class: "field", id: "host-field", hidden: "true" },
@@ -589,7 +701,6 @@
           ),
         ),
         h("div", { class: "actions" }, h("button", { type: "submit" }, "Put it on the ballot")),
-      ),
     );
   }
 
@@ -668,6 +779,8 @@
       windowId: data.get("windowId"),
       kind: data.get("kind"),
       hostId: data.get("hostId"),
+      category: data.get("category"),
+      difficulty: data.get("difficulty"),
     });
   });
 
@@ -685,6 +798,8 @@
     const after = `${next.weekKey}|${next.proofs.map((proof) => proof.status).join()}|${Object.keys(next.taps).length}|${next.hostQueue.length}`;
     if (before !== after) commit("resolve", {});
   }, 1000);
+
+  window.addEventListener("hashchange", () => render());
 
   fetch("/api/session")
     .then((response) => response.json())

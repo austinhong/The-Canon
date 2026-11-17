@@ -220,6 +220,19 @@
     return rankable(state).filter((item) => voteCount(state, item.id) > 0).slice(0, 5);
   }
 
+  function pointsOf(item) {
+    if (!item) return 0;
+    const direct = Number(item.points);
+    if (Number.isFinite(direct) && direct > 0) return direct;
+    const level = (CANON.difficulties || []).find((entry) => entry.id === item.difficulty);
+    return level ? level.points : 1;
+  }
+
+  function categoryName(item) {
+    const found = (CANON.categories || []).find((entry) => entry.id === item.category);
+    return found ? found.name : "The college";
+  }
+
   function methodLabel(item) {
     if (item.kind === "hosted") return "Host marks you present";
     if (item.mode === "all-halls") return "Every hall, same day";
@@ -449,6 +462,9 @@
         hostId: item.hostId || null,
         hidden: false,
         window: item.window,
+        category: item.category || "college",
+        points: pointsOf(item),
+        difficulty: item.difficulty || null,
       });
       state.suggestions = state.suggestions.filter((suggestion) => suggestion.id !== item.id);
     }
@@ -497,6 +513,10 @@
     if (input.kind === "hosted" && !CANON.hosts.some((host) => host.id === input.hostId)) {
       return fail("A hosted item needs a real host.");
     }
+    const category = (CANON.categories || []).find((entry) => entry.id === input.category);
+    if (!category) return fail("Pick the section this belongs in.");
+    const level = (CANON.difficulties || []).find((entry) => entry.id === input.difficulty);
+    if (!level) return fail("Pick how hard this is.");
     const id = input.id || `p-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
     if (itemById(next, id)) return fail("That item is already on the book.");
     next.suggestions.push({
@@ -509,6 +529,9 @@
       window: choice.window,
       authorId: input.studentId,
       proposed: true,
+      category: category.id,
+      difficulty: level.id,
+      points: level.points,
     });
     return ok(next, "It's on the ballot.");
   }
@@ -728,7 +751,7 @@
       if (proof.status !== "counted") continue;
       const owner = person(proof.studentId);
       if (!owner || map[owner.college] == null) continue;
-      map[owner.college] += 1;
+      map[owner.college] += pointsOf(itemById(state, proof.itemId));
     }
     return CANON.colleges.map((college) => [college.name, map[college.name]]);
   }
@@ -775,6 +798,8 @@
     topList,
     isPublic,
     methodLabel,
+    pointsOf,
+    categoryName,
     openness,
     fences,
     sunriseDate,

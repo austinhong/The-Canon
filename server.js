@@ -220,6 +220,8 @@ async function act(state, user, body) {
         windowId: body.windowId,
         kind: body.kind,
         hostId: body.hostId,
+        category: body.category,
+        difficulty: body.difficulty,
       },
       now,
     );
