@@ -4,6 +4,10 @@ The Canon is a four-year bucket list that a campus writes for itself. Students o
 
 The book is one page with five sections: Standings, Profile, Vote, Propose, and Finish.
 
+## Demo Video
+
+https://github.com/user-attachments/assets/f58fe3f0-1991-4de1-8f24-29fed4203507
+
 ## What a week does
 
 Anyone in the book can put up to five proposals on the ballot each week. A proposal has a title, a sentence for what counts, a section, a difficulty, a campus place, the hours it can be finished, and who confirms it. The campus place is typed. If the words match a known place, such as Silliman or Sterling Memorial Library, the proposal keeps that pin. Any other place is kept as written.
@@ -83,10 +87,6 @@ Fences are approximate campus points, tight enough that a check-in from across t
 This app was written in Cursor with Grok. The screenshot below is the composer during that work, with Grok 4.7 Medium selected.
 
 ![Cursor composer with Grok 4.7 Medium selected while building The Canon](grok-in-cursor.jpg)
-
-The recording below is the book running.
-
-https://github.com/user-attachments/assets/f58fe3f0-1991-4de1-8f24-29fed4203507
 
 ## This repo
 
