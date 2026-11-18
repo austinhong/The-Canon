@@ -86,9 +86,7 @@ This app was written in Cursor with Grok. The screenshot below is the composer d
 
 The recording below is the book running.
 
-<video src="Real.mp4" controls width="720">
-  <a href="Real.mp4">Play Real.mp4</a>
-</video>
+https://github.com/user-attachments/assets/f58fe3f0-1991-4de1-8f24-29fed4203507
 
 ## This repo
 
