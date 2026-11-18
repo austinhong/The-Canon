@@ -135,10 +135,11 @@ main {
 
 .crest {
   display: block;
-  width: 4.4rem;
-  height: 5rem;
+  width: 5.4rem;
+  height: 5.4rem;
   flex: 0 0 auto;
-  color: var(--gold);
+  object-fit: cover;
+  border-radius: 0.2rem;
 }
 
 .mark {

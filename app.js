@@ -447,18 +447,7 @@
   }
 
   function crest() {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "crest");
-    svg.setAttribute("viewBox", "0 0 84 96");
-    svg.setAttribute("aria-hidden", "true");
-    svg.innerHTML =
-      '<path d="M42 4 L76 18 V48 C76 68 60 84 42 92 C24 84 8 68 8 48 V18 Z" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
-      '<path d="M42 12 L68 22 V46 C68 62 56 74 42 80 C28 74 16 62 16 46 V22 Z" fill="none" stroke="currentColor" stroke-width="0.8"/>' +
-      '<path d="M28 58 V40 H42 C50 40 55 44 55 50 C55 56 50 60 42 60 H28" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
-      '<path d="M28 50 H52" stroke="currentColor" stroke-width="1.5"/>' +
-      '<path d="M24 30 H60" stroke="currentColor" stroke-width="0.8"/>' +
-      '<circle cx="42" cy="26" r="1.4" fill="currentColor"/>';
-    return svg;
+    return h("img", { class: "crest", src: "/logo.png", alt: "" });
   }
 
   function siteHeader() {

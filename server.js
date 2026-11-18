@@ -7,11 +7,12 @@ const ROOT = __dirname;
 const DATA = path.join(ROOT, "data");
 const PORT = Number(process.env.PORT) || 8765;
 const CAS = "https://secure.its.yale.edu/cas";
-const FILES = new Set(["/index.html", "/app.js", "/rules.js", "/canon.js", "/styles.css"]);
+const FILES = new Set(["/index.html", "/app.js", "/rules.js", "/canon.js", "/styles.css", "/logo.png"]);
 const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
+  ".png": "image/png",
 };
 
 const { CANON, CanonRules: rules } = loadRules();
