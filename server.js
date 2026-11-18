@@ -3,8 +3,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 
-const ROOT = __dirname;
-const DATA = path.join(ROOT, "data");
+const ROOT = fs.existsSync(path.join(__dirname, "index.html")) ? __dirname : process.cwd();
+const DATA = process.env.VERCEL ? path.join("/tmp", "canon-data") : path.join(ROOT, "data");
 const PORT = Number(process.env.PORT) || 8765;
 const CAS = "https://secure.its.yale.edu/cas";
 const FILES = new Set(["/index.html", "/app.js", "/rules.js", "/canon.js", "/styles.css", "/logo.png"]);
@@ -20,6 +20,14 @@ const sessions = new Map();
 let weather = { snowing: null, at: 0 };
 
 fs.mkdirSync(DATA, { recursive: true });
+if (process.env.VERCEL) {
+  const seed = path.join(ROOT, "data");
+  for (const name of ["book.json", "hosts.json"]) {
+    const target = path.join(DATA, name);
+    const source = path.join(seed, name);
+    if (!fs.existsSync(target) && fs.existsSync(source)) fs.copyFileSync(source, target);
+  }
+}
 
 function loadRules() {
   const context = { console, Intl, Date, Math, structuredClone, globalThis: null };
@@ -89,10 +97,15 @@ function send(res, status, body, headers) {
   res.end(body);
 }
 
+function cookie(sid) {
+  const secure = process.env.VERCEL ? "; Secure" : "";
+  if (sid === "") return `canon=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
+  return `canon=${sid}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800${secure}`;
+}
+
 function redirect(res, location, sid) {
   const headers = { Location: location };
-  if (sid) headers["Set-Cookie"] = `canon=${sid}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800`;
-  if (sid === "") headers["Set-Cookie"] = "canon=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0";
+  if (sid != null) headers["Set-Cookie"] = cookie(sid);
   send(res, 302, "", headers);
 }
 
@@ -310,7 +323,7 @@ function serveFile(res, urlPath) {
     send(res, 404, "Not found", { "Content-Type": "text/plain; charset=utf-8" });
     return;
   }
-  const file = path.join(ROOT, name.slice(1));
+  const file = path.join(ROOT, name === "/app.js" ? "client.js" : name.slice(1));
   send(res, 200, fs.readFileSync(file), { "Content-Type": TYPES[path.extname(file)] });
 }
 
@@ -367,7 +380,7 @@ const server = http.createServer(async (req, res) => {
         res,
         200,
         { ok: true, user: publicUser(person), state: person.college ? rules.prepare(state, new Date()) : null },
-        { "Set-Cookie": `canon=${startSession(person)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800` },
+        { "Set-Cookie": cookie(startSession(person)) },
       );
       return;
     }
@@ -412,6 +425,10 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, "127.0.0.1", () => {
-  console.log(`The Canon is at http://127.0.0.1:${PORT}`);
-});
+if (process.env.VERCEL) {
+  server.listen(PORT);
+} else {
+  server.listen(PORT, "127.0.0.1", () => {
+    console.log(`The Canon is at http://127.0.0.1:${PORT}`);
+  });
+}
