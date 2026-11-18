@@ -8,6 +8,10 @@ The book is one page with five sections: Standings, Profile, Vote, Propose, and 
 
 https://github.com/user-attachments/assets/f58fe3f0-1991-4de1-8f24-29fed4203507
 
+# Vercel Hosted Website:
+
+https://the-canon-rouge.vercel.app/
+
 ## What a week does
 
 Anyone in the book can put up to five proposals on the ballot each week. A proposal has a title, a sentence for what counts, a section, a difficulty, a campus place, the hours it can be finished, and who confirms it. The campus place is typed. If the words match a known place, such as Silliman or Sterling Memorial Library, the proposal keeps that pin. Any other place is kept as written.
