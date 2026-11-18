@@ -84,6 +84,12 @@ This app was written in Cursor with Grok. The screenshot below is the composer d
 
 ![Cursor composer with Grok 4.7 Medium selected while building The Canon](grok-in-cursor.jpg)
 
+The recording below is the book running.
+
+<video src="Real.mp4" controls width="720">
+  <a href="Real.mp4">Play Real.mp4</a>
+</video>
+
 ## This repo
 
 | Path | What it is |
@@ -96,5 +102,6 @@ This app was written in Cursor with Grok. The screenshot below is the composer d
 | `rules.test.js` | The rules, without a browser |
 | `server.js` | Yale sign-in, the demonstration entry, the session, and the book |
 | `grok-in-cursor.jpg` | The composer, showing Grok was used to build this |
+| `Real.mp4` | A recording of the book |
 
 From this folder, run `node server.js` and open `http://127.0.0.1:8765`. Register that exact callback, `http://127.0.0.1:8765/auth/callback`, with Yale if you are signing in from this machine. The rules alone can be checked with `node rules.test.js`.
