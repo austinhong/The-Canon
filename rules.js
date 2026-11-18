@@ -514,9 +514,10 @@
   function suggest(state, input, now) {
     const next = prepare(state, now);
     if (!isStudent(input.studentId)) return fail("Only students can propose an item.");
-    if (next.suggestions.some((item) => item.authorId === input.studentId)) {
-      return fail("You already have a proposal on the ballot.");
-    }
+    const used = next.suggestions.filter(
+      (item) => item.authorId === input.studentId && item.proposedWeek === next.weekKey,
+    ).length;
+    if (used >= 5) return fail("Five proposals a week. The next ones wait until Monday.");
     const title = (input.title || "").trim();
     const rule = (input.rule || "").trim();
     if (title.length < 8 || title.length > 80) return fail("Give the item a title, at least a few words.");
@@ -546,6 +547,7 @@
       window: choice.window,
       authorId: input.studentId,
       proposed: true,
+      proposedWeek: next.weekKey,
       category: category.id,
       difficulty: level.id,
       points: level.points,

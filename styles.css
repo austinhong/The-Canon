@@ -251,12 +251,6 @@ h1.page::after {
 
 .fine.center, .center { text-align: center; }
 
-.scores li.mine {
-  color: var(--navy);
-  font-weight: 650;
-  background: rgba(166, 133, 70, 0.12);
-}
-
 h2 {
   margin: 0;
   font-size: 1.22rem;
@@ -348,30 +342,92 @@ button.ghost:hover:not(:disabled) {
 
 button:disabled { opacity: 0.45; cursor: default; }
 
-.scores {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  margin: 1.3rem 0 0;
-  padding: 0;
+.board-lead {
+  margin: 1.15rem auto 0;
+  max-width: 36rem;
+  text-align: center;
+  font-size: 1.15rem;
+}
+
+.board {
   list-style: none;
-  border-top: 1px solid var(--gold);
-  border-bottom: 1px solid var(--gold);
-}
-
-.scores li {
+  margin: 1.15rem 0 0;
+  padding: 0;
   display: flex;
-  justify-content: space-between;
-  gap: 0.6rem;
-  padding: 0.38rem 0.2rem;
-  border-bottom: 1px solid var(--line);
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.03em;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
-.scores li:nth-child(odd) { padding-right: 0.8rem; }
-.scores li:nth-child(even) { padding-left: 0.8rem; border-left: 1px solid var(--line); }
+.board-row {
+  display: grid;
+  grid-template-columns: 2.1rem minmax(9rem, 1.3fr) minmax(7rem, 1fr) 2.4rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.62rem 0.8rem;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.board-row.place-1 {
+  background: linear-gradient(90deg, rgba(166, 133, 70, 0.28), #fff 58%);
+  border-color: var(--gold);
+}
+
+.board-row.place-2 { background: linear-gradient(90deg, rgba(12, 26, 48, 0.06), #fff 52%); }
+.board-row.place-3 { background: linear-gradient(90deg, rgba(140, 90, 52, 0.12), #fff 52%); }
+
+.board-row.mine {
+  box-shadow: inset 4px 0 0 var(--gold);
+}
+
+.board-rank,
+.board-score,
+.board-you {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.board-rank {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--gold-deep);
+}
+
+.board-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 1.08rem;
+}
+
+.board-you {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+
+.board-track {
+  display: block;
+  height: 0.42rem;
+  background: rgba(12, 26, 48, 0.08);
+  overflow: hidden;
+}
+
+.board-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy), var(--gold));
+}
+
+.board-row.mine .board-fill { background: linear-gradient(90deg, var(--gold-deep), #d7bf86); }
+
+.board-score {
+  text-align: right;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--navy);
+}
 
 section { margin-top: 1.8rem; }
 
@@ -562,7 +618,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   .brand-name { font-size: 1.6rem; }
   .sheet { margin: 0; border-left: 0; border-right: 0; box-shadow: none; }
   h1 { font-size: 2.4rem; }
-  .filters, .scores, .colleges, .photos { grid-template-columns: 1fr; }
-  .scores li:nth-child(even) { border-left: 0; padding-left: 0.2rem; }
+  .filters, .colleges, .photos { grid-template-columns: 1fr; }
+  .board-row { grid-template-columns: 1.8rem 1fr auto; }
+  .board-track { grid-column: 1 / -1; }
   section.done { padding: 0.85rem 0.75rem 0.2rem; }
 }

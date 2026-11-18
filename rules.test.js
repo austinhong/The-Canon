@@ -253,4 +253,31 @@ step = rules.suggest(
 assert.equal(step.ok, true, step.error);
 assert.equal(step.state.suggestions[0].placeId, "silliman");
 
+state = rules.blankState(NOW);
+for (let n = 1; n <= 5; n += 1) {
+  step = rules.suggest(
+    state,
+    { id: `week-${n}`, studentId: "maya", title: `Week proposal number ${n}`, rule: "Do this once, on the campus place named here.", placeId: "lc", windowId: "evening", kind: "presence", category: "letters", difficulty: "modest" },
+    NOW,
+  );
+  assert.equal(step.ok, true, step.error);
+  state = step.state;
+}
+assert.equal(state.suggestions.length, 5);
+step = rules.suggest(
+  state,
+  { id: "week-6", studentId: "maya", title: "Week proposal number 6", rule: "Do this once, on the campus place named here.", placeId: "lc", windowId: "evening", kind: "presence", category: "letters", difficulty: "modest" },
+  NOW,
+);
+assert.match(step.error, /Five proposals/);
+state.suggestions.forEach((item) => {
+  item.proposedWeek = "1999-W01";
+});
+step = rules.suggest(
+  state,
+  { id: "week-next", studentId: "maya", title: "Week proposal after Monday", rule: "Do this once, on the campus place named here.", placeId: "lc", windowId: "evening", kind: "presence", category: "letters", difficulty: "modest" },
+  NOW,
+);
+assert.equal(step.ok, true, step.error);
+
 console.log("rules ok");

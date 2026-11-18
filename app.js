@@ -12,6 +12,8 @@
   let me = null;
   let world = { snowing: null };
   let notice = "";
+  let noticePage = "";
+  let noticeTimer = 0;
   let busy = false;
   let saving = false;
   let showManual = false;
@@ -44,15 +46,42 @@
     const result = await response.json();
     saving = false;
     if (!result.ok) {
-      notice = result.error || "The book could not record that.";
+      setNotice(result.error || "The book could not record that.");
       if (result.user) me = result.user;
       render();
       return;
     }
     state = result.state;
     me = result.user || me;
-    notice = result.message || "";
+    setNotice(result.message || "", true);
     render();
+  }
+
+  function surface() {
+    if (!me) return "gate";
+    if (!me.college) return "college";
+    return page();
+  }
+
+  function setNotice(message, momentary) {
+    notice = message || "";
+    noticePage = notice ? surface() : "";
+    clearTimeout(noticeTimer);
+    noticeTimer = 0;
+    if (!notice || !momentary) return;
+    const shownOn = noticePage;
+    noticeTimer = setTimeout(() => {
+      if (noticePage !== shownOn) return;
+      notice = "";
+      noticePage = "";
+      const node = document.querySelector("main .notice");
+      if (node) node.remove();
+    }, 2400);
+  }
+
+  function banner() {
+    if (!notice || noticePage !== surface()) return null;
+    return h("p", { class: "notice", role: "status" }, notice);
   }
 
   function h(tag, attrs) {
@@ -177,7 +206,7 @@
     const where = await locate(spot);
     if (!where.ok) {
       busy = false;
-      notice = where.error;
+      setNotice(where.error);
       render();
       return;
     }
@@ -186,7 +215,7 @@
       shot = await takePhoto();
     } catch (err) {
       busy = false;
-      if (!err || err.message !== "cancel") notice = err.message;
+      if (!err || err.message !== "cancel") setNotice(err.message);
       render();
       return;
     }
@@ -216,7 +245,7 @@
     const where = await locate(rules.fences(item, state, rules.person(tap.studentId), new Date()));
     if (!where.ok) {
       busy = false;
-      notice = where.error;
+      setNotice(where.error);
       render();
       return;
     }
@@ -225,7 +254,7 @@
       shot = await takePhoto();
     } catch (err) {
       busy = false;
-      if (!err || err.message !== "cancel") notice = err.message;
+      if (!err || err.message !== "cancel") setNotice(err.message);
       render();
       return;
     }
@@ -250,7 +279,7 @@
     const where = await locate(rules.fences(item, state, rules.person(request.studentId), new Date()));
     if (!where.ok) {
       busy = false;
-      notice = where.error;
+      setNotice(where.error);
       render();
       return;
     }
@@ -457,7 +486,7 @@
         "Sign in with your NetID on Yale's own page. This book never sees your password. For a demonstration, enter with your name. No NetID is required, and you can propose, vote, and finish.",
       ),
       problem ? h("p", { class: "notice", role: "status" }, problem) : null,
-      notice && showManual ? h("p", { class: "notice", role: "status" }, notice) : null,
+      banner(),
       h(
         "div",
         { class: "gate-actions" },
@@ -483,7 +512,7 @@
       h("p", { class: "mark" }, me.name),
       h("h1", {}, "Your college"),
       h("p", { class: "lede" }, "The book keeps one residential college for you."),
-      notice ? h("p", { class: "notice", role: "status" }, notice) : null,
+      banner(),
       h(
         "div",
         { class: "colleges" },
@@ -570,7 +599,7 @@
     const nodes = [
       h("h1", { class: "page" }, title),
       lede ? h("p", { class: "lede" }, lede) : null,
-      notice ? h("p", { class: "notice", role: "status" }, notice) : null,
+      banner(),
     ];
     for (let i = 2; i < arguments.length; i += 1) {
       const child = arguments[i];
@@ -666,16 +695,44 @@
   }
 
   function renderStandings(student) {
-    const scoreList = rules.scores(state);
+    const scoreList = rules
+      .scores(state)
+      .map(([college, score]) => ({ college, score }))
+      .sort((a, b) => b.score - a.score || a.college.localeCompare(b.college));
+    const best = scoreList[0] ? scoreList[0].score : 0;
+    const leaders = scoreList.filter((row) => row.score === best && best > 0).map((row) => row.college);
+    const lead =
+      leaders.length === 0
+        ? "No finishes have been counted yet."
+          : leaders.length === 1
+            ? `${leaders[0]} leads with ${best}.`
+            : leaders.length > 3
+              ? `Several colleges lead with ${best}.`
+              : `${leaders.join(" and ")} lead with ${best}.`;
     frame(
       "Standings",
       "Counted finishes, weighted by how hard the task is.",
+      h("p", { class: "board-lead" }, lead),
       h(
-        "ul",
-        { class: "scores" },
-        scoreList.map(([college, score]) =>
-          h("li", { class: college === student.college ? "mine" : "" }, h("span", {}, college), h("span", {}, String(score))),
-        ),
+        "ol",
+        { class: "board" },
+        scoreList.map((row, index) => {
+          const width = best > 0 && row.score > 0 ? Math.max(6, Math.round((row.score / best) * 100)) : 0;
+          const place = row.score <= 0 ? "" : index === 0 ? " place-1" : index === 1 ? " place-2" : index === 2 ? " place-3" : "";
+          return h(
+            "li",
+            { class: `board-row${row.college === student.college ? " mine" : ""}${place}` },
+            h("span", { class: "board-rank" }, String(index + 1)),
+            h(
+              "span",
+              { class: "board-name" },
+              row.college,
+              row.college === student.college ? h("span", { class: "board-you" }, "Your college") : null,
+            ),
+            h("span", { class: "board-track" }, h("span", { class: "board-fill", style: `width:${width}%` })),
+            h("span", { class: "board-score" }, String(row.score)),
+          );
+        }),
       ),
       h("p", { class: "fine center" }, "A modest task is 2. A marked task is 3. A severe task is 5. A rare task is 8."),
     );
@@ -731,11 +788,15 @@
   }
 
   function renderPropose(student) {
-    const mine = (state.suggestions || []).find((item) => item.authorId === student.id);
+    const mine = (state.suggestions || []).filter((item) => item.authorId === student.id);
+    const used = mine.filter((item) => item.proposedWeek === state.weekKey).length;
+    const left = Math.max(0, 5 - used);
     frame(
       "Propose",
-      "One proposal at a time. If it is still in the top five when the votes clear, it joins the book.",
-      mine ? section("Your proposal", card({ ...mine, proposed: true }, { mode: "vote" })) : proposeForm(),
+      "Five proposals a week. If one is still in the top five when the votes clear, it joins the book.",
+      h("p", { class: "fine center" }, left === 0 ? "Five proposals are already on the ballot this week." : `${left} of 5 left this week.`),
+      mine.length ? section("Your proposals", mine.map((item) => card({ ...item, proposed: true }, { mode: "vote" }))) : null,
+      left > 0 ? proposeForm() : null,
     );
   }
 
@@ -889,7 +950,7 @@
     if (action === "college") commit("college", { college: id });
     if (action === "manual") {
       showManual = true;
-      notice = "";
+      setNotice("");
       renderGate();
     }
     if (action === "demo") {
@@ -946,18 +1007,18 @@
         .then((response) => response.json())
         .then((result) => {
           if (!result.ok) {
-            notice = result.error || "The register could not be signed.";
+            setNotice(result.error || "The register could not be signed.");
             renderGate();
             return;
           }
           me = result.user;
           state = result.state;
           showManual = false;
-          notice = "";
+          setNotice("");
           render();
         })
         .catch(() => {
-          notice = "The register could not be signed.";
+          setNotice("The register could not be signed.");
           renderGate();
         });
       return;
@@ -992,7 +1053,12 @@
     if (before !== after) commit("resolve", {});
   }, 1000);
 
-  window.addEventListener("hashchange", () => render());
+  window.addEventListener("hashchange", () => {
+    notice = "";
+    noticePage = "";
+    clearTimeout(noticeTimer);
+    render();
+  });
 
   fetch("/api/session")
     .then((response) => response.json())
@@ -1002,7 +1068,7 @@
       render();
     })
     .catch(() => {
-      notice = "Open this book from its server. A file on its own cannot sign you in.";
+      setNotice("Open this book from its server. A file on its own cannot sign you in.");
       renderGate();
     });
 
