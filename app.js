@@ -466,8 +466,10 @@
     mount(
       siteHeader(),
       h("div", { class: "sheet arrive gate" },
-      h("p", { class: "mark" }, "The register"),
-      h("h1", {}, "Come in"),
+      h("img", { class: "gate-crest", src: "/logo.png", alt: "" }),
+      h("p", { class: "mark" }, "Lux et Veritas"),
+      h("h1", {}, "The Canon"),
+      h("div", { class: "gate-ornament", "aria-hidden": "true" }),
       h("p", { class: "lede" }, "For students of the fourteen residential colleges."),
       h(
         "p",
