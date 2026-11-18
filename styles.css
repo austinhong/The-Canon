@@ -27,22 +27,71 @@ body {
 button, select, input, textarea, a { font: inherit; }
 
 main {
-  position: relative;
-  max-width: 44rem;
-  margin: 2.2rem auto 3rem;
-  padding: 2.6rem 1.6rem 3.4rem;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ivory);
+  border: 0;
+  box-shadow: none;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 0.9rem 1.6rem;
   background:
-    linear-gradient(180deg, rgba(166, 133, 70, 0.18), transparent 90px),
+    linear-gradient(180deg, rgba(166, 133, 70, 0.16), transparent 70%),
+    #0c1a30;
+  border-bottom: 1px solid var(--gold);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+  color: #f6efdf;
+  text-decoration: none;
+}
+
+.brand-text { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.brand-kicker {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.brand-name {
+  font-size: 2rem;
+  line-height: 0.95;
+  letter-spacing: 0.06em;
+}
+
+.sheet {
+  max-width: 52rem;
+  margin: 1.4rem auto 3rem;
+  padding: 1.7rem 1.5rem 2.6rem;
+  background:
+    linear-gradient(180deg, rgba(166, 133, 70, 0.16), transparent 110px),
     var(--ivory);
   color: var(--ink);
   border: 1px solid var(--gold);
-  box-shadow: 0 0 0 7px #0c1a30, 0 0 0 8px var(--gold), 0 30px 70px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.28);
 }
 
-.topbar {
-  display: flex;
-  justify-content: flex-end;
-  margin: -1.1rem 0 0.2rem;
+.sheet.arrive { animation: arrive 0.42s ease; }
+
+.sheet.gate { max-width: 40rem; }
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 .identity {
@@ -74,10 +123,10 @@ main {
 
 .crest {
   display: block;
-  width: 3.1rem;
-  height: 3.4rem;
-  margin: 0 auto 0.8rem;
-  color: var(--gold-deep);
+  width: 4.4rem;
+  height: 5rem;
+  flex: 0 0 auto;
+  color: var(--gold);
 }
 
 .mark {
@@ -105,25 +154,62 @@ h1.page { font-size: 2.5rem; }
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.55rem 1rem;
-  margin: 1.1rem 0 0.2rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line);
+  align-items: center;
+  gap: 0.35rem 1.15rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #081424;
+  border-bottom: 1px solid rgba(166, 133, 70, 0.45);
 }
 
-.nav a {
+.nav a, .nav button.nav-out {
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: 0.68rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--muted);
+  color: #e7d7b0;
+  background: transparent;
+  border: 0;
+  padding: 0.2rem 0;
 }
 
 .nav a.on {
-  color: var(--navy);
-  box-shadow: inset 0 -1px 0 var(--gold);
+  color: #fff;
+  box-shadow: inset 0 -2px 0 var(--gold);
 }
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.7rem 1rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #fbf7ef;
+  color: var(--ink);
+  border-bottom: 1px solid var(--gold);
+}
+
+.confirm p { margin: 0; }
+
+.filters {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 0.55rem;
+  margin: 1.1rem 0 0.3rem;
+}
+
+.demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  margin-top: 0.85rem;
+}
+
+.demo input { flex: 1 1 12rem; width: auto; }
 
 .points {
   margin: 0.35rem 0 0;
@@ -251,8 +337,8 @@ section { margin-top: 1.8rem; }
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  padding: 0.95rem 1rem 1rem;
-  margin: 0 0 0.75rem;
+  padding: 1.05rem 1.1rem 1.1rem;
+  margin: 0 0 0.85rem;
 }
 
 .card.top { box-shadow: inset 3px 0 0 var(--gold); }
@@ -396,11 +482,12 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   outline-offset: 3px;
 }
 
-@media (max-width: 640px) {
-  main { margin: 0; box-shadow: none; }
-  h1 { font-size: 2.6rem; }
-  .scores, .colleges, .photos { grid-template-columns: 1fr; }
-  .topbar { justify-content: center; margin: 0 0 0.8rem; }
-  .identity { text-align: center; }
+@media (max-width: 720px) {
+  .site-header { align-items: flex-start; flex-direction: column; }
+  .identity { text-align: left; }
+  .brand-name { font-size: 1.6rem; }
+  .sheet { margin: 0; border-left: 0; border-right: 0; }
+  h1 { font-size: 2.4rem; }
+  .filters, .scores, .colleges, .photos { grid-template-columns: 1fr; }
   .scores li:nth-child(even) { border-left: 0; padding-left: 0.2rem; }
 }

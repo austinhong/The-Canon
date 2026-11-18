@@ -272,6 +272,18 @@ async function act(state, user, body) {
     );
   }
   if (body.action === "challenge") return rules.challenge(state, { studentId: user.id, proofId: body.proofId }, now);
+  if (body.action === "demo") {
+    return rules.demoFinish(
+      state,
+      {
+        studentId: user.id,
+        itemId: body.itemId,
+        placeName: body.placeName,
+        proofId: `proof-${crypto.randomBytes(4).toString("hex")}`,
+      },
+      now,
+    );
+  }
   return { ok: false, error: "Unknown action." };
 }
 
@@ -298,7 +310,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === "GET" && url.pathname === "/auth/logout") {
       sessions.delete(cookieSid(req));
-      redirect(res, `${CAS}/logout`, "");
+      redirect(res, "/", "");
       return;
     }
     if (req.method === "GET" && url.pathname === "/auth/callback") {

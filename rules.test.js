@@ -223,4 +223,17 @@ assert.equal(Object.keys(state.votes).length, 0);
 assert.equal(state.lastCrown.titles[0], "Close the art gallery");
 assert.equal(rules.weekKey(NOW), state.weekKey);
 
+state = rules.blankState(NOW);
+step = rules.demoFinish(state, { studentId: "maya", itemId: "library-note", placeName: "Sterling Memorial Library", proofId: "demo-1" }, NOW);
+assert.equal(step.ok, true, step.error);
+state = step.state;
+assert.equal(state.proofs[0].status, "counted");
+assert.equal(state.proofs[0].demo, true);
+assert.equal(rules.scores(state).find(([college]) => college === "Silliman")[1], 2);
+assert.deepEqual(coords(state), []);
+step = rules.demoFinish(state, { studentId: "maya", itemId: "library-note", placeName: "Sterling again" }, NOW);
+assert.match(step.error, /already entered/);
+step = rules.demoFinish(state, { studentId: "maya", itemId: "sunrise", placeName: " " }, NOW);
+assert.match(step.error, /place/);
+
 console.log("rules ok");

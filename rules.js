@@ -536,6 +536,38 @@
     return ok(next, "It's on the ballot.");
   }
 
+  function demoFinish(state, input, now) {
+    const next = prepare(state, now);
+    const student = person(input.studentId);
+    const item = itemById(next, input.itemId);
+    if (!student || !isStudent(student.id)) return fail("Only a student can enter a finish.");
+    if (!student.college) return fail("Choose your residential college first.");
+    if (!item || item.proposed || !inBook(next, item.id)) return fail("That task is not in the book yet.");
+    if (hasCounted(next, item.id, student.id) || hasPending(next, item.id, student.id)) {
+      return fail("This task is already entered for you.");
+    }
+    const placeName = String(input.placeName || "").trim().replace(/\s+/g, " ");
+    if (placeName.length < 2 || placeName.length > 80) return fail("Name the place, in a few words.");
+    next.proofs.push({
+      id: input.proofId || `demo-${item.id}-${student.id}`,
+      itemId: item.id,
+      studentId: student.id,
+      witnessId: null,
+      hostId: null,
+      stampId: null,
+      placeName,
+      halls: null,
+      photo: null,
+      witnessPhoto: null,
+      status: "counted",
+      demo: true,
+      createdAt: now.getTime(),
+      challengeUntil: now.getTime(),
+      challenges: [],
+    });
+    return ok(next, `${item.title} is in. ${pointsOf(item)} points for ${student.college}.`);
+  }
+
   function putTap(state, input, now, extra) {
     state.taps[input.studentId] = {
       code: input.code,
@@ -806,6 +838,7 @@
     prepare,
     vote,
     suggest,
+    demoFinish,
     beginPresence,
     confirmWitness,
     beginHosted,

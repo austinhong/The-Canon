@@ -15,6 +15,12 @@
   let busy = false;
   let saving = false;
   let showManual = false;
+  let confirmOut = false;
+  let painted = "";
+  const filters = {
+    vote: { find: "", section: "", difficulty: "", votes: "" },
+    finish: { find: "", section: "", difficulty: "", votes: "" },
+  };
 
   function mount() {
     const nodes = [];
@@ -276,6 +282,7 @@
     const finishing = options.mode === "finish";
     const canVote = voting && rules.isStudent(student.id) && !sealed && !(item.proposed && item.authorId === student.id);
     const showCheckin = finishing && open.open && rules.isStudent(student.id) && !item.proposed && !waiting && !tap;
+    const already = finishing && !item.proposed && finishedItem(student.id, item.id);
 
     return h(
       "article",
@@ -332,6 +339,21 @@
           )
         : null,
       finishing && waiting ? h("p", { class: "reason" }, "Waiting for the host, who has to be at the place.") : null,
+      already ? h("p", { class: "reason" }, "Already in your book.") : null,
+      finishing && !already && !item.proposed
+        ? h(
+            "div",
+            { class: "demo" },
+            h("input", {
+              id: `place-${item.id}`,
+              name: "placeName",
+              placeholder: "Name the place",
+              maxlength: "80",
+              "aria-label": `Place for ${item.title}`,
+            }),
+            h("button", { type: "button", "data-action": "demo", "data-id": item.id }, "Enter it"),
+          )
+        : null,
       showCheckin
         ? h(
             "div",
@@ -358,12 +380,12 @@
     return h(
       "article",
       { class: `card${proof.status === "pending" ? " pending" : ""}` },
-      h("p", { class: "meta" }, proof.status === "pending" ? "Waiting on other colleges" : "Struck"),
+      h("p", { class: "meta" }, proof.demo ? "Entered for the record" : proof.status === "pending" ? "Waiting on other colleges" : "Struck"),
       h("h2", {}, item ? item.title : "An item"),
       h(
         "p",
         { class: "fine" },
-        `${student ? student.name : "A student"} · ${other ? other.name : "A host"} · ${proof.placeName}`,
+        `${student ? student.name : "A student"}${other ? ` · ${other.name}` : ""} · ${proof.placeName}`,
       ),
       proof.status === "pending"
         ? h(
@@ -373,7 +395,9 @@
               ? `${colleges.join(" and ")} challenged. ${colleges.length} of 2 colleges.`
               : `Counts in ${formatLeft(left)} unless two colleges challenge it.`,
           )
-        : h("p", { class: "reason" }, `Challenged by ${colleges.join(" and ")}. Both people have one fewer challenge left.`),
+        : proof.status === "rejected"
+          ? h("p", { class: "reason" }, `Challenged by ${colleges.join(" and ")}. Both people have one fewer challenge left.`)
+          : h("p", { class: "reason" }, proof.demo ? "Entered for the demonstration. The points are on the college." : "Counted."),
       h("div", { class: "photos" }, photo(proof.photo, "Live check-in photo"), photo(proof.witnessPhoto, "Witness photo")),
       canChallenge
         ? h(
@@ -396,22 +420,36 @@
   function crest() {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "crest");
-    svg.setAttribute("viewBox", "0 0 64 72");
+    svg.setAttribute("viewBox", "0 0 84 96");
     svg.setAttribute("aria-hidden", "true");
     svg.innerHTML =
-      '<path d="M32 3 L58 14 V36 C58 52 46 64 32 69 C18 64 6 52 6 36 V14 Z" fill="none" stroke="currentColor" stroke-width="1.4"/>' +
-      '<path d="M18 40 V28 H28 C34 28 38 31 38 36 C38 41 34 44 28 44 H18" fill="none" stroke="currentColor" stroke-width="1.4"/>' +
-      '<path d="M18 34 H36" stroke="currentColor" stroke-width="1.4"/>';
+      '<path d="M42 4 L76 18 V48 C76 68 60 84 42 92 C24 84 8 68 8 48 V18 Z" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<path d="M42 12 L68 22 V46 C68 62 56 74 42 80 C28 74 16 62 16 46 V22 Z" fill="none" stroke="currentColor" stroke-width="0.8"/>' +
+      '<path d="M28 58 V40 H42 C50 40 55 44 55 50 C55 56 50 60 42 60 H28" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
+      '<path d="M28 50 H52" stroke="currentColor" stroke-width="1.5"/>' +
+      '<path d="M24 30 H60" stroke="currentColor" stroke-width="0.8"/>' +
+      '<circle cx="42" cy="26" r="1.4" fill="currentColor"/>';
     return svg;
+  }
+
+  function siteHeader() {
+    const brand = h(
+      "a",
+      { class: "brand", href: me && me.college ? "#standings" : "/" },
+      crest(),
+      h("span", { class: "brand-text" }, h("span", { class: "brand-kicker" }, "Yale College"), h("span", { class: "brand-name" }, "The Canon")),
+    );
+    return h("header", { class: "site-header" }, brand, me ? identity() : null);
   }
 
   function renderGate() {
     const params = new URLSearchParams(location.search);
     const problem = authErrors[params.get("error")] || "";
     mount(
-      crest(),
-      h("p", { class: "mark" }, "Yale College"),
-      h("h1", {}, "The Canon"),
+      siteHeader(),
+      h("div", { class: "sheet arrive gate" },
+      h("p", { class: "mark" }, "The register"),
+      h("h1", {}, "Come in"),
       h("p", { class: "lede" }, "For students of the fourteen residential colleges."),
       h(
         "p",
@@ -435,13 +473,14 @@
             h("button", { type: "submit" }, "Enter the book"),
           )
         : null,
+      ),
     );
   }
 
   function renderCollege() {
     mount(
-      identity(),
-      crest(),
+      siteHeader(),
+      h("div", { class: "sheet arrive" },
       h("p", { class: "mark" }, me.name),
       h("h1", {}, "Your college"),
       h("p", { class: "lede" }, "The book keeps one residential college for this NetID."),
@@ -452,6 +491,7 @@
         window.CANON.colleges.map((college) =>
           h("button", { type: "button", "data-action": "college", "data-id": college.name }, college.name),
         ),
+      ),
       ),
     );
   }
@@ -486,14 +526,10 @@
       ? `${student.college} · ${points} ${points === 1 ? "point" : "points"}`
       : "College not chosen";
     return h(
-      "div",
-      { class: "topbar" },
-      h(
-        "a",
-        { class: "identity", href: student.college ? "#profile" : "#standings" },
-        h("span", { class: "identity-name" }, student.name),
-        h("span", { class: "identity-meta" }, detail),
-      ),
+      "a",
+      { class: "identity", href: student.college ? "#profile" : "#standings" },
+      h("span", { class: "identity-name" }, student.name),
+      h("span", { class: "identity-meta" }, detail),
     );
   }
 
@@ -510,18 +546,26 @@
       "nav",
       { class: "nav" },
       PAGES.map(([id, label]) => h("a", { href: `#${id}`, class: current === id ? "on" : "" }, label)),
-      h("a", { href: "/auth/logout" }, "Sign out"),
+      h("button", { type: "button", class: "nav-out", "data-action": "signout" }, "Sign out"),
+    );
+  }
+
+  function confirmBar() {
+    return h(
+      "div",
+      { class: "confirm", role: "group" },
+      h("p", {}, "Sign out and return to the gate?"),
+      h("button", { type: "button", "data-action": "confirm-out" }, "Sign out"),
+      h("button", { type: "button", class: "ghost", "data-action": "stay" }, "Stay"),
     );
   }
 
   function frame(title, lede) {
+    const enter = page() !== painted;
+    painted = page();
     const nodes = [
-      identity(),
-      crest(),
-      h("p", { class: "mark" }, "Yale College"),
       h("h1", { class: "page" }, title),
       lede ? h("p", { class: "lede" }, lede) : null,
-      nav(),
       notice ? h("p", { class: "notice", role: "status" }, notice) : null,
     ];
     for (let i = 2; i < arguments.length; i += 1) {
@@ -529,7 +573,56 @@
       if (Array.isArray(child)) nodes.push(...child);
       else nodes.push(child);
     }
-    mount(...nodes);
+    mount(siteHeader(), nav(), confirmOut ? confirmBar() : null, h("div", { class: enter ? "sheet arrive" : "sheet" }, nodes));
+  }
+
+  function passes(item, which) {
+    const bag = filters[which];
+    const q = bag.find.trim().toLowerCase();
+    if (q && !`${item.title} ${item.rule}`.toLowerCase().includes(q)) return false;
+    if (bag.section && item.category !== bag.section) return false;
+    if (bag.difficulty && String(rules.pointsOf(item)) !== bag.difficulty) return false;
+    const votes = rules.voteCount(state, item.id);
+    if (bag.votes === "0" && votes !== 0) return false;
+    if (bag.votes === "1" && votes < 1) return false;
+    if (bag.votes === "3" && votes < 3) return false;
+    return true;
+  }
+
+  function filterBar(which) {
+    const bag = filters[which];
+    const section = h("select", { name: "section", "data-list": which, "aria-label": "Section" });
+    section.append(h("option", { value: "" }, "Every section"));
+    for (const category of window.CANON.categories) section.append(h("option", { value: category.id }, category.name));
+    section.value = bag.section;
+    const difficulty = h("select", { name: "difficulty", "data-list": which, "aria-label": "Difficulty" });
+    difficulty.append(h("option", { value: "" }, "Every difficulty"));
+    for (const level of window.CANON.difficulties) {
+      difficulty.append(h("option", { value: String(level.points) }, `${level.label}, ${level.points}`));
+    }
+    difficulty.value = bag.difficulty;
+    const votes = h("select", { name: "votes", "data-list": which, "aria-label": "Votes" });
+    for (const [value, label] of [
+      ["", "Any votes"],
+      ["0", "No votes yet"],
+      ["1", "At least 1 vote"],
+      ["3", "At least 3 votes"],
+    ]) votes.append(h("option", { value }, label));
+    votes.value = bag.votes;
+    return h(
+      "div",
+      { class: "filters" },
+      h("input", {
+        name: "find",
+        "data-list": which,
+        placeholder: "Search tasks",
+        value: bag.find,
+        "aria-label": "Search tasks",
+      }),
+      section,
+      difficulty,
+      votes,
+    );
   }
 
   function grouped(items, mode) {
@@ -605,17 +698,28 @@
     const now = new Date();
     const top = rules.topList(state);
     const topIds = new Set(top.map((item) => item.id));
-    const rest = rules.rankable(state).filter((item) => !topIds.has(item.id) && !(item.hidden && !rules.isPublic(state, item)));
+    const open = rules.rankable(state).filter((item) => !(item.hidden && !rules.isPublic(state, item)) && passes(item, "vote"));
+    const narrowed = filters.vote.find || filters.vote.section || filters.vote.difficulty || filters.vote.votes;
     frame(
       "This week",
       `${rules.nextResetLabel(now)} One vote on each task, except your own proposal. The five with the most votes are the top.`,
-      section(
-        "The top",
-        top.length
-          ? top.map((item, index) => card(item, { mode: "vote", top: true, rank: index + 1 }))
-          : h("p", { class: "fine" }, "No votes yet."),
-      ),
-      grouped(rest, "vote"),
+      filterBar("vote"),
+      narrowed
+        ? open.length
+          ? grouped(open, "vote")
+          : h("p", { class: "fine" }, "Nothing matches.")
+        : [
+            section(
+              "The top",
+              top.length
+                ? top.map((item, index) => card(item, { mode: "vote", top: true, rank: index + 1 }))
+                : h("p", { class: "fine" }, "No votes yet."),
+            ),
+            grouped(
+              open.filter((item) => !topIds.has(item.id)),
+              "vote",
+            ),
+          ],
       state.lastCrown && state.lastCrown.titles.length
         ? section("Last week on top", h("p", { class: "fine" }, state.lastCrown.titles.join(" · ")))
         : null,
@@ -637,10 +741,10 @@
       const item = rules.itemById(state, entry.itemId);
       return item && rules.appointed(state, item, student.id) && entry.expires > Date.now();
     });
-    const tasks = rules.book(state);
+    const tasks = rules.book(state).filter((item) => passes(item, "finish"));
     frame(
       "Finish",
-      `A live camera, on site, inside the hour. A second phone can confirm you ${rules.PAIR_LIMIT} times. Two other colleges can strike a finish within a day.`,
+      "Name the place and enter the task. This demonstration skips the camera, the map, and the second phone.",
       hostJobs.length
         ? section(
             "Waiting on you",
@@ -663,7 +767,8 @@
           )
         : null,
       pending.length ? section("Open to a challenge", pending.map(proofCard)) : null,
-      grouped(tasks, "finish"),
+      filterBar("finish"),
+      tasks.length ? grouped(tasks, "finish") : h("p", { class: "fine" }, "Nothing matches."),
     );
   }
 
@@ -759,9 +864,42 @@
       notice = "";
       renderGate();
     }
+    if (action === "demo") {
+      const place = document.getElementById(`place-${id}`);
+      commit("demo", { itemId: id, placeName: place ? place.value : "" });
+    }
+    if (action === "signout") {
+      confirmOut = true;
+      render();
+    }
+    if (action === "stay") {
+      confirmOut = false;
+      render();
+    }
+    if (action === "confirm-out") location.assign("/auth/logout");
+  });
+
+  app.addEventListener("input", (event) => {
+    if (event.target.name !== "find") return;
+    const which = event.target.getAttribute("data-list");
+    if (!filters[which]) return;
+    filters[which].find = event.target.value;
+    const start = event.target.selectionStart;
+    render();
+    const again = document.querySelector(`input[name="find"][data-list="${which}"]`);
+    if (again) {
+      again.focus();
+      if (start != null) again.setSelectionRange(start, start);
+    }
   });
 
   app.addEventListener("change", (event) => {
+    const which = event.target.getAttribute("data-list");
+    if (which && filters[which] && ["section", "difficulty", "votes"].includes(event.target.name)) {
+      filters[which][event.target.name] = event.target.value;
+      render();
+      return;
+    }
     if (event.target.name === "kind") {
       const host = document.getElementById("host-field");
       if (host) host.hidden = event.target.value !== "hosted";
