@@ -458,7 +458,8 @@
         season: "Voted in",
         kind: item.kind,
         mode: "place",
-        placeId: item.placeId,
+        placeId: item.placeId || null,
+        placeName: item.placeName || (CANON.places[item.placeId] ? CANON.places[item.placeId].name : ""),
         hostId: item.hostId || null,
         hidden: false,
         window: item.window,
@@ -495,6 +496,21 @@
     return ok(next);
   }
 
+  function resolvePlace(input) {
+    const written = String(input.placeName || "").trim().replace(/\s+/g, " ");
+    const places = Object.values(CANON.places);
+    const needle = (written || String(input.placeId || "")).trim().replace(/\s+/g, " ");
+    if (needle.length < 2 || needle.length > 80) return null;
+    const lower = needle.toLowerCase();
+    const exact = places.find((entry) => entry.id === lower || entry.name.toLowerCase() === lower);
+    if (exact) return { id: exact.id, name: exact.name };
+    const loose = places.filter(
+      (entry) => entry.name.toLowerCase().includes(lower) || lower.includes(entry.name.toLowerCase()),
+    );
+    if (loose.length === 1) return { id: loose[0].id, name: loose[0].name };
+    return { id: null, name: needle };
+  }
+
   function suggest(state, input, now) {
     const next = prepare(state, now);
     if (!isStudent(input.studentId)) return fail("Only students can propose an item.");
@@ -505,8 +521,8 @@
     const rule = (input.rule || "").trim();
     if (title.length < 8 || title.length > 80) return fail("Give the item a title, at least a few words.");
     if (rule.length < 8 || rule.length > 200) return fail("Say what counts, in a sentence or two.");
-    const place = CANON.places[input.placeId];
-    if (!place) return fail("Pick a campus place. A proposal cannot invent its own pin.");
+    const place = resolvePlace(input);
+    if (!place) return fail("Name a campus place, in a few words.");
     const choice = CANON.windowChoices.find((option) => option.id === input.windowId);
     if (!choice) return fail("Pick the hours when this can be finished.");
     if (input.kind !== "presence" && input.kind !== "hosted") return fail("Say whether this is on site or hosted.");
@@ -523,7 +539,8 @@
       id,
       title,
       rule,
-      placeId: input.placeId,
+      placeId: place.id,
+      placeName: place.name,
       kind: input.kind,
       hostId: input.kind === "hosted" ? input.hostId : null,
       window: choice.window,
@@ -547,7 +564,7 @@
       return fail("This task is already entered for you.");
     }
     const placeName = String(input.placeName || "").trim().replace(/\s+/g, " ");
-    if (placeName.length < 2 || placeName.length > 80) return fail("Name the place, in a few words.");
+    if (placeName.length < 2 || placeName.length > 80) return fail("Name the person, in a few words.");
     next.proofs.push({
       id: input.proofId || `demo-${item.id}-${student.id}`,
       itemId: item.id,

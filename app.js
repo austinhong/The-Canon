@@ -286,7 +286,7 @@
 
     return h(
       "article",
-      { class: `card${options.top ? " top" : ""}${sealed ? " sealed" : ""}` },
+      { class: `card${options.top ? " top" : ""}${sealed ? " sealed" : ""}${already ? " done" : ""}` },
       h(
         "div",
         { class: "card-top" },
@@ -297,7 +297,7 @@
           h(
             "p",
             { class: "meta" },
-            [rules.categoryName(item), `${rules.pointsOf(item)} pts`, item.proposed ? "On the ballot" : item.season || null]
+            [rules.categoryName(item), placeLabel(item), `${rules.pointsOf(item)} pts`, item.proposed ? "On the ballot" : item.season || null]
               .filter(Boolean)
               .join(" · "),
           ),
@@ -315,7 +315,7 @@
       h("p", { class: "fine" }, item.rule),
       finishing || !voting ? h("p", { class: "method" }, rules.methodLabel(item)) : null,
       author ? h("p", { class: "author" }, `Proposed by ${author.name}`) : null,
-      finishing ? h("p", { class: "reason" }, open.reason) : null,
+      finishing && !already ? h("p", { class: "reason" }, open.reason) : null,
       finishing && mine
         ? h(
             "div",
@@ -339,7 +339,7 @@
           )
         : null,
       finishing && waiting ? h("p", { class: "reason" }, "Waiting for the host, who has to be at the place.") : null,
-      already ? h("p", { class: "reason" }, "Already in your book.") : null,
+      already ? h("p", { class: "reason" }, witnessed(student.id, item.id)) : null,
       finishing && !already && !item.proposed
         ? h(
             "div",
@@ -347,9 +347,9 @@
             h("input", {
               id: `place-${item.id}`,
               name: "placeName",
-              placeholder: "Name the place",
+              placeholder: "Name the person",
               maxlength: "80",
-              "aria-label": `Place for ${item.title}`,
+              "aria-label": `Person for ${item.title}`,
             }),
             h("button", { type: "button", "data-action": "demo", "data-id": item.id }, "Enter it"),
           )
@@ -454,7 +454,7 @@
       h(
         "p",
         { class: "rule" },
-        "Sign in with your NetID on Yale's own page. This book never sees your password. If Yale has not yet allowed this book, sign the register with your name and NetID.",
+        "Sign in with your NetID on Yale's own page. This book never sees your password. For a demonstration, enter with your name. No NetID is required, and you can propose, vote, and finish.",
       ),
       problem ? h("p", { class: "notice", role: "status" }, problem) : null,
       notice && showManual ? h("p", { class: "notice", role: "status" }, notice) : null,
@@ -462,14 +462,13 @@
         "div",
         { class: "gate-actions" },
         h("a", { class: "enter", href: "/auth/login" }, "Enter with your NetID"),
-        h("button", { type: "button", class: "ghost enter", "data-action": "manual" }, "Sign the register"),
+        h("button", { type: "button", class: "ghost enter", "data-action": "manual" }, "Enter for the demonstration"),
       ),
       showManual
         ? h(
             "form",
             { id: "signup", class: "signup" },
             field("signup-name", "Name", h("input", { name: "name", autocomplete: "name", required: "true", maxlength: "70" })),
-            field("signup-netid", "NetID", h("input", { name: "netid", autocomplete: "username", required: "true", maxlength: "31", autocapitalize: "off" })),
             h("button", { type: "submit" }, "Enter the book"),
           )
         : null,
@@ -483,7 +482,7 @@
       h("div", { class: "sheet arrive" },
       h("p", { class: "mark" }, me.name),
       h("h1", {}, "Your college"),
-      h("p", { class: "lede" }, "The book keeps one residential college for this NetID."),
+      h("p", { class: "lede" }, "The book keeps one residential college for you."),
       notice ? h("p", { class: "notice", role: "status" }, notice) : null,
       h(
         "div",
@@ -517,6 +516,11 @@
 
   function finishedItem(studentId, itemId) {
     return state.proofs.some((proof) => proof.status === "counted" && proof.studentId === studentId && proof.itemId === itemId);
+  }
+
+  function witnessed(studentId, itemId) {
+    const proof = state.proofs.find((entry) => entry.status === "counted" && entry.studentId === studentId && entry.itemId === itemId);
+    return proof && proof.placeName ? `Completed · ${proof.placeName}` : "Completed";
   }
 
   function identity() {
@@ -742,9 +746,11 @@
       return item && rules.appointed(state, item, student.id) && entry.expires > Date.now();
     });
     const tasks = rules.book(state).filter((item) => passes(item, "finish"));
+    const completed = tasks.filter((item) => finishedItem(student.id, item.id));
+    const openTasks = tasks.filter((item) => !finishedItem(student.id, item.id));
     frame(
       "Finish",
-      "Name the place and enter the task. This demonstration skips the camera, the map, and the second phone.",
+      "Name the person and enter the task. This demonstration skips the camera, the map, and the second phone.",
       hostJobs.length
         ? section(
             "Waiting on you",
@@ -767,13 +773,26 @@
           )
         : null,
       pending.length ? section("Open to a challenge", pending.map(proofCard)) : null,
+      completed.length
+        ? section(
+            "Completed",
+            completed.map((item) => card(item, { mode: "finish" })),
+            "done",
+          )
+        : null,
       filterBar("finish"),
-      tasks.length ? grouped(tasks, "finish") : h("p", { class: "fine" }, "Nothing matches."),
+      openTasks.length ? grouped(openTasks, "finish") : completed.length ? null : h("p", { class: "fine" }, "Nothing matches."),
     );
   }
 
-  function section(kicker, body) {
-    return h("section", {}, h("p", { class: "mark" }, kicker), body);
+  function section(kicker, body, extra) {
+    return h("section", { class: extra || "" }, h("p", { class: "mark" }, kicker), body);
+  }
+
+  function placeLabel(item) {
+    if (item.placeName) return item.placeName;
+    const place = item.placeId && window.CANON.places[item.placeId];
+    return place ? place.name : "";
   }
 
   function proposeForm() {
@@ -802,10 +821,19 @@
       field(
         "place",
         "Campus place",
-        select(
-          "placeId",
-          places.map(([id, place]) => [id, place.name]),
-        ),
+        h("input", {
+          name: "placeName",
+          maxlength: "80",
+          required: "true",
+          placeholder: "Type a campus place",
+          list: "campus-places",
+          autocomplete: "off",
+        }),
+      ),
+      h(
+        "datalist",
+        { id: "campus-places" },
+        places.map(([, place]) => h("option", { value: place.name })),
       ),
       field(
         "window",
@@ -913,7 +941,7 @@
       fetch("/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.get("name"), netid: data.get("netid") }),
+        body: JSON.stringify({ name: data.get("name") }),
       })
         .then((response) => response.json())
         .then((result) => {
@@ -940,7 +968,7 @@
     commit("suggest", {
       title: data.get("title"),
       rule: data.get("rule"),
-      placeId: data.get("placeId"),
+      placeName: data.get("placeName"),
       windowId: data.get("windowId"),
       kind: data.get("kind"),
       hostId: data.get("hostId"),

@@ -177,6 +177,21 @@ async function campusWeather() {
   return weather;
 }
 
+function demonstrationId(state, name) {
+  const same = state.people.find(
+    (member) => String(member.id).startsWith("demo-") && member.name.toLowerCase() === name.toLowerCase(),
+  );
+  if (same) return same.id;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 20) || "guest";
+  let id = `demo-${slug}`;
+  let n = 2;
+  while (state.people.some((member) => member.id === id)) {
+    id = `demo-${slug}-${n}`;
+    n += 1;
+  }
+  return id;
+}
+
 function ensurePerson(state, profile) {
   let person = state.people.find((member) => member.id === profile.id);
   if (!person) {
@@ -217,6 +232,7 @@ async function act(state, user, body) {
         title: body.title,
         rule: body.rule,
         placeId: body.placeId,
+        placeName: body.placeName,
         windowId: body.windowId,
         kind: body.kind,
         hostId: body.hostId,
@@ -335,7 +351,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const netid = String(body.netid || "").trim().toLowerCase();
       const name = String(body.name || "").trim().replace(/\s+/g, " ");
-      if (!/^[a-z][a-z0-9]{1,30}$/.test(netid)) {
+      if (netid && !/^[a-z][a-z0-9]{1,30}$/.test(netid)) {
         json(res, 400, { ok: false, error: "Enter a NetID of letters and numbers." });
         return;
       }
@@ -344,7 +360,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const state = loadBook();
-      const person = ensurePerson(state, { id: netid, name });
+      const person = ensurePerson(state, { id: netid || demonstrationId(state, name), name });
       saveBook(state);
       json(
         res,

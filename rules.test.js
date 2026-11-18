@@ -234,6 +234,23 @@ assert.deepEqual(coords(state), []);
 step = rules.demoFinish(state, { studentId: "maya", itemId: "library-note", placeName: "Sterling again" }, NOW);
 assert.match(step.error, /already entered/);
 step = rules.demoFinish(state, { studentId: "maya", itemId: "sunrise", placeName: " " }, NOW);
-assert.match(step.error, /place/);
+assert.match(step.error, /person/);
+
+state = rules.blankState(NOW);
+step = rules.suggest(
+  state,
+  { id: "beinecke-hour", studentId: "leo", title: "Sit in Beinecke at dusk", rule: "Stay until the lights come up in the stacks.", placeName: "Beinecke Library", windowId: "evening", kind: "presence", category: "letters", difficulty: "modest" },
+  NOW,
+);
+assert.equal(step.ok, true, step.error);
+assert.equal(step.state.suggestions[0].placeId, null);
+assert.equal(step.state.suggestions[0].placeName, "Beinecke Library");
+step = rules.suggest(
+  rules.blankState(NOW),
+  { id: "silliman-hour", studentId: "leo", title: "Sit in Silliman at dusk", rule: "Stay until the lights come up in the hall.", placeName: "Silliman", windowId: "evening", kind: "presence", category: "letters", difficulty: "modest" },
+  NOW,
+);
+assert.equal(step.ok, true, step.error);
+assert.equal(step.state.suggestions[0].placeId, "silliman");
 
 console.log("rules ok");
